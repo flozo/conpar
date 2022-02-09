@@ -205,44 +205,94 @@ def test_key_value_pair():
     for line_in, line_out in zip(line_key_value_raw, line_key_value_content):
         assert fn.Line(line_in, **cfg).key_value_pair() == line_out
 
-# def test_gettypes():
-#     lines = [
-#         '# This is a comment.',
-#         '# This is another comment.',
-#         '',
-#         '[section1]',
-#         'key1 = value1',
-#         'key2 = value2',
-#         'key3 = value3',
-#         '',
-#         '',
-#         '# This is also a comment.',
-#         '',
-#         '[section2]',
-#         'key1 = value1',
-#         'key2 = value2',
-#         'key3 = value3',
-#         'aklwfwiopwjj',
-#         '',
-#         ]
-#     types = [
-#         'comment',
-#         'comment',
-#         'empty',
-#         'section_head',
-#         'key_value_pair',
-#         'key_value_pair',
-#         'key_value_pair',
-#         'empty',
-#         'empty',
-#         'comment',
-#         'empty',
-#         'section_head',
-#         'key_value_pair',
-#         'key_value_pair',
-#         'key_value_pair',
-#         'unknown',
-#         'empty',
-#         ]
-#     cfg1 = fn.Configuration('#', '=', ['[', ']'], lines)
-#     assert cfg1.get_types(True) == types
+
+def test_get_types():
+    rawlines = [
+        '# This is a comment.',
+        '# This is another comment.',
+        '',
+        '[section1]',
+        'key1 = value1',
+        'key2 = value2',
+        'key3 = value3',
+        '',
+        '',
+        '# This is also a comment.',
+        '',
+        '[section2]',
+        'key1 = value1',
+        'key2 = value2',
+        'key3 = value3',
+        'aklwfwiopwjj',
+        '',
+        ]
+    types = [
+        'comment',
+        'comment',
+        'empty',
+        'section_head',
+        'key_value_pair',
+        'key_value_pair',
+        'key_value_pair',
+        'empty',
+        'empty',
+        'comment',
+        'empty',
+        'section_head',
+        'key_value_pair',
+        'key_value_pair',
+        'key_value_pair',
+        'unknown',
+        'empty',
+        ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    assert fn.Configuration(rawlines, **cfg).get_types() == types
+
+
+def test_get_content():
+    rawlines = [
+        '# This is a comment.',
+        '# This is another comment.',
+        '',
+        '[section1]',
+        'key1 = value1',
+        'key2 = value2',
+        'key3 = value3',
+        '',
+        '',
+        '# This is also a comment.',
+        '',
+        '[section2]',
+        'key1 = value1',
+        'key2 = value2',
+        'key3 = value3',
+        'aklwfwiopwjj',
+        '',
+        ]
+    content = [
+        'This is a comment.',
+        'This is another comment.',
+        '',
+        'section1',
+        ('key1', 'value1'),
+        ('key2', 'value2'),
+        ('key3', 'value3'),
+        '',
+        '',
+        'This is also a comment.',
+        '',
+        'section2',
+        ('key1', 'value1'),
+        ('key2', 'value2'),
+        ('key3', 'value3'),
+        'aklwfwiopwjj',
+        '',
+        ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    assert fn.Configuration(rawlines, **cfg).get_content() == content

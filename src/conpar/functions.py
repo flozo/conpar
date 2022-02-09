@@ -59,14 +59,16 @@ class Line(Config_settings):
         if self.line[0] != self.section_marker[0]:
             return False
         # Check if an optional closing marker is present
-        if len(self.section_marker) == 2 and self.line[-1] == self.section_marker[1]:
+        if (len(self.section_marker) == 2 and
+                self.line[-1] == self.section_marker[1]):
             return True
         else:
             return False
 
     def is_unknown(self):
         """Check if line type is unknown."""
-        if not(self.is_comment() or self.is_empty() or self.is_key_value_pair() or self.is_section()):
+        if not(self.is_comment() or self.is_empty() or
+               self.is_key_value_pair() or self.is_section()):
             return True
         else:
             return False
@@ -94,15 +96,6 @@ class Line(Config_settings):
             return self.line[1:-1].strip()
 
 
-# def type_definitions():
-#     type_defs = {
-#         'type_name': ['section_head', 'comment', 'key_value_pair', 'empty'],
-#         'marker': ['[', '#', '=', ''],
-#         'regex_all': ['\[.*\]', ],
-#         'regex_content':,
-#         }
-
-
 class Configuration(Config_settings):
     """Define configuration settings."""
 
@@ -110,23 +103,41 @@ class Configuration(Config_settings):
         super().__init__(comment_char, section_marker, key_value_sep)
         self.rawlines = rawlines
 
-    def get_types(self, ignore_space):
+    def get_types(self):
         """Determine configuration content type."""
         types = []
-        for line in self.rawlines:
-            if ignore_space is True:
-                line = removespace(line)
-            if iscomment(line, self.comment_char) is True:
+        for rawline in self.rawlines:
+            line = Line(rawline, self.comment_char, self.section_marker,
+                        self.key_value_sep)
+            if line.is_comment() is True:
                 types.append('comment')
-            elif isempty(line) is True:
+            elif line.is_empty() is True:
                 types.append('empty')
-            elif iskeyvaluepair(line, self.key_value_sep) is True:
-                types.append('key_value_pair')
-            elif issection(line, self.section_marker) is True:
+            elif line.is_section() is True:
                 types.append('section_head')
+            elif line.is_key_value_pair() is True:
+                types.append('key_value_pair')
             else:
                 types.append('unknown')
         return types
+
+    def get_content(self):
+        """Determine line contents."""
+        content = []
+        for rawline in self.rawlines:
+            line = Line(rawline, self.comment_char, self.section_marker,
+                        self.key_value_sep)
+            if line.is_comment() is True:
+                content.append(line.comment())
+            elif line.is_empty() is True:
+                content.append('')
+            elif line.is_section() is True:
+                content.append(line.section_name())
+            elif line.is_key_value_pair() is True:
+                content.append(line.key_value_pair())
+            else:
+                content.append(line.rawline)
+        return content
 
 
 def config_dict(rawlines, types):
