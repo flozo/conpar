@@ -160,31 +160,38 @@ class Configuration(Config_settings):
                 clean_lines.append(content)
         return clean_lines
 
+    def dataframe(self):
+        """Create Pandas DataFrame with all information."""
+        cfg_dict = {
+            'type': self.get_types(),
+            'content': self.get_content(),
+            'raw': self.rawlines,
+            'formatted': self.formatted(),
+            }
+        return pd.DataFrame(cfg_dict)
 
-def config_dict(rawlines, types):
-    cfg_dict = {
-        'type': types,
-        'content': rawlines
-        }
-    cfg_df = pd.DataFrame(cfg_dict)
-    print(cfg_df)
-    # regexes = {
-    #     'section_head': r'^\s*\[\s*(\S*)\s*\]\s*$',
-    #     'comment': r'^\s*#\s*(.*)$',
-    #     'key_value_pair': r'(.+)=(.+)',
-    #     'empty': '^\n$',
-    #     }
-    # test = [
-    #     '[section]',
-    #     '  [section]   ',
-    #     ' [ section  ] ',
-    #     '    ',
-    #     ]
-    
-
-    # for line, line_type in zip(rawlines, types):
-    #     if line_type == 'comment':
-    #         cfg.append([line_type])
+    def dictionary(self):
+        """Create dictionary with sections and key-value pairs."""
+        # Get series of section heads
+        section_heads = self.dataframe()['content'][self.dataframe()['type'] == 'section_head']
+        # Get series of key-value pairs
+        key_value_pairs = self.dataframe()['content'][self.dataframe()['type'] == 'key_value_pair']
+        # Initialize section list
+        section = []
+        for i, section_head in enumerate(section_heads):
+            # Determine start index for i-th section head
+            start = section_heads.index.values[i]
+            if i < len(section_heads)-1:
+                # Determine stop index for i-th section head
+                stop = section_heads.index.values[i+1]
+            else:
+                # Determine stop index for final section head
+                stop = key_value_pairs.index[-1]
+            # Cast key-value pairs between start and stop into list, then dict
+            section.append(dict(list(key_value_pairs.loc[start:stop])))
+        # Return dictionary with section heads as first-level keys and
+        # sub-dictionaries with key-value pairs as values
+        return dict(zip(section_heads, section))
 
 
 def filetolist(inputfile):
