@@ -296,3 +296,33 @@ def test_get_content():
            'key_value_sep': '=',
            }
     assert fn.Configuration(rawlines, **cfg).get_content() == content
+
+
+def test_formatted():
+    rawlines = [
+        '#This is a comment.',
+        '  # This is another comment.   ',
+        '',
+        '   [   section1    ]    ',
+        'key1 = value1',
+        'key2=value2',
+        '   key key key 3 =     value value 3   ',
+        '',
+        'aklwfwiopwjj',
+        ]
+    formatted = [
+        '# This is a comment.',
+        '# This is another comment.',
+        '',
+        '[ section1 ]',
+        'key1 = value1',
+        'key2 = value2',
+        'key key key 3 = value value 3',
+        '',
+        'aklwfwiopwjj',
+        ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    assert fn.Configuration(rawlines, **cfg).formatted() == formatted

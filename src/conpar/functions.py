@@ -139,6 +139,27 @@ class Configuration(Config_settings):
                 content.append(line.rawline)
         return content
 
+    def formatted(self):
+        """Create nicely formatted config-file lines."""
+        clean_lines = []
+        for line_type, content in zip(self.get_types(), self.get_content()):
+            if line_type == 'comment':
+                clean_lines.append('{} {}'.format(self.comment_char, content))
+            elif line_type == 'empty':
+                clean_lines.append('')
+            elif line_type == 'section_head':
+                sec_line = '{} {}'.format(self.section_marker[0], content)
+                if len(self.section_marker) == 2:
+                    sec_line = sec_line + ' ' + self.section_marker[1]
+                clean_lines.append(sec_line)
+            elif line_type == 'key_value_pair':
+                clean_lines.append('{} {} {}'.format(content[0],
+                                                     self.key_value_sep,
+                                                     content[1]))
+            else:
+                clean_lines.append(content)
+        return clean_lines
+
 
 def config_dict(rawlines, types):
     cfg_dict = {
