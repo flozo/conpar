@@ -5,58 +5,34 @@
 import conpar.functions as fn
 
 
-def test_removespace():
-    test_lines = [
-        '0123456789',
-        '     56789',
-        '012345    ',
-        '    456   ',
-        '0123   789',
-        ' 1 3 5 7 9',
-        '0 2 4 6 8 ',
-        '          ',
-        '    # Comment  ',
-        '  [ section1 ] ',
-        ' key = value ',
-        ]
-    result_lines = [
-        '0123456789',
-        '56789',
-        '012345',
-        '456',
-        '0123789',
-        '13579',
-        '02468',
-        '',
-        '#Comment',
-        '[section1]',
-        'key=value',
-        ]
-    for test_line, result_line in zip(test_lines, result_lines):
-        assert fn.removespace(test_line) == result_line
-
-
-def test_iscomment():
+def test_is_comment():
     line_iscomment_true = [
         '### Comment',
         '# Comment',
-        ]
-    line_iscomment_false = [
+        '# Comment     adfsdgs  ',
         ' ### Comment',
         ' # Comment',
+        ]
+    line_iscomment_false = [
         'key = value',
         'key=value',
         '  key = value  ',
+        '[section]',
+        '  [  section  ]  ',
         '',
         '          ',
         ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
     for line in line_iscomment_true:
-        assert fn.iscomment(line, '#') is True
+        assert fn.Line(line, **cfg).is_comment() is True
     for line in line_iscomment_false:
-        assert fn.iscomment(line, '#') is False
+        assert fn.Line(line, **cfg).is_comment() is False
 
 
-def test_isempty():
+def test_is_empty():
     line_isempty_true = [
         '',
         '          ',
@@ -69,13 +45,17 @@ def test_isempty():
         '[section1]',
         'key = value',
         ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
     for line in line_isempty_true:
-        assert fn.isempty(line) is True
+        assert fn.Line(line, **cfg).is_empty() is True
     for line in line_isempty_false:
-        assert fn.isempty(line) is False
+        assert fn.Line(line, **cfg).is_empty() is False
 
 
-def test_iskeyvaluepair():
+def test_is_key_value_pair():
     line_iskeyvaluepair_true = [
         'key = value',
         'key=value',
@@ -88,13 +68,17 @@ def test_iskeyvaluepair():
         'key:value',
         '            ',
         ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
     for line in line_iskeyvaluepair_true:
-        assert fn.iskeyvaluepair(line, '=') is True
+        assert fn.Line(line, **cfg).is_key_value_pair() is True
     for line in line_iskeyvaluepair_false:
-        assert fn.iskeyvaluepair(line, '=') is False
+        assert fn.Line(line, **cfg).is_key_value_pair() is False
 
 
-def test_issection():
+def test_is_section():
     line_issection_true = [
         '[section1]',
         '[[[section1]]]',
@@ -109,50 +93,156 @@ def test_issection():
         '',
         '          ',
         ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
     for line in line_issection_true:
-        assert fn.issection(line, ['[', ']']) is True
+        assert fn.Line(line, **cfg).is_section() is True
     for line in line_issection_false:
-        assert fn.issection(line, ['[', ']']) is False
+        assert fn.Line(line, **cfg).is_section() is False
 
 
-def test_gettypes():
-    lines = [
-        '# This is a comment.',
-        '# This is another comment.',
+def test_is_unknown():
+    line_is_unknown_true = [
+        'sakjflkjgl',
+        'lkajlkfj   lkdjlfk',
+        ']section1[',
+        'aljfljdfj # comment',
+        ]
+    line_is_unknown_false = [
+        '### Comment',
+        '# Comment',
+        '# Comment     adfsdgs  ',
+        ' ### Comment',
+        ' # Comment',
         '',
+        '          ',
+        'key = value',
+        'key=value',
+        '  key = value  ',
+        'asljfjdjfljl=lkjasdjfjj',
         '[section1]',
-        'key1 = value1',
-        'key2 = value2',
-        'key3 = value3',
-        '',
-        '',
-        '# This is also a comment.',
-        '',
-        '[section2]',
-        'key1 = value1',
-        'key2 = value2',
-        'key3 = value3',
-        'aklwfwiopwjj',
-        '',
+        '[[[section1]]]',
+        '[]ction1[]]',
         ]
-    types = [
-        'comment',
-        'comment',
-        'empty',
-        'section_head',
-        'key_value_pair',
-        'key_value_pair',
-        'key_value_pair',
-        'empty',
-        'empty',
-        'comment',
-        'empty',
-        'section_head',
-        'key_value_pair',
-        'key_value_pair',
-        'key_value_pair',
-        'unknown',
-        'empty',
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    for line in line_is_unknown_true:
+        assert fn.Line(line, **cfg).is_unknown() is True
+    for line in line_is_unknown_false:
+        assert fn.Line(line, **cfg).is_unknown() is False
+
+
+def test_comment():
+    line_comments_raw = [
+        '# comment1',
+        '   # comment2',
+        '# comment3     ',
+        '  #    comment4    ',
+        '#   comment comment 5   ',
         ]
-    cfg1 = fn.Configuration('#', '=', ['[', ']'], lines)
-    assert cfg1.get_types(True) == types
+    line_comments_content = [
+        'comment1',
+        'comment2',
+        'comment3',
+        'comment4',
+        'comment comment 5',
+        ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    for line_in, line_out in zip(line_comments_raw, line_comments_content):
+        assert fn.Line(line_in, **cfg).comment() == line_out
+
+
+def test_section_name():
+    line_section_name_raw = [
+        '[section1]',
+        '   [section2]',
+        '[section3]     ',
+        '    [section4]    ',
+        '   [    section5    ]  ',
+        '  [  section name 6     ]   ',
+        ]
+    line_section_name_content = [
+        'section1',
+        'section2',
+        'section3',
+        'section4',
+        'section5',
+        'section name 6',
+        ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    for line_in, line_out in zip(line_section_name_raw,
+                                 line_section_name_content):
+        assert fn.Line(line_in, **cfg).section_name() == line_out
+
+
+def test_key_value_pair():
+    line_key_value_raw = [
+        'key1=value1',
+        'key2 = value2',
+        '   key3    =     value3    ',
+        '   key key key 4   =  value value value 4  ',
+        ]
+    line_key_value_content = [
+        ('key1', 'value1'),
+        ('key2', 'value2'),
+        ('key3', 'value3'),
+        ('key key key 4', 'value value value 4'),
+        ]
+    cfg = {'comment_char': '#',
+           'section_marker': '[]',
+           'key_value_sep': '=',
+           }
+    for line_in, line_out in zip(line_key_value_raw, line_key_value_content):
+        assert fn.Line(line_in, **cfg).key_value_pair() == line_out
+
+# def test_gettypes():
+#     lines = [
+#         '# This is a comment.',
+#         '# This is another comment.',
+#         '',
+#         '[section1]',
+#         'key1 = value1',
+#         'key2 = value2',
+#         'key3 = value3',
+#         '',
+#         '',
+#         '# This is also a comment.',
+#         '',
+#         '[section2]',
+#         'key1 = value1',
+#         'key2 = value2',
+#         'key3 = value3',
+#         'aklwfwiopwjj',
+#         '',
+#         ]
+#     types = [
+#         'comment',
+#         'comment',
+#         'empty',
+#         'section_head',
+#         'key_value_pair',
+#         'key_value_pair',
+#         'key_value_pair',
+#         'empty',
+#         'empty',
+#         'comment',
+#         'empty',
+#         'section_head',
+#         'key_value_pair',
+#         'key_value_pair',
+#         'key_value_pair',
+#         'unknown',
+#         'empty',
+#         ]
+#     cfg1 = fn.Configuration('#', '=', ['[', ']'], lines)
+#     assert cfg1.get_types(True) == types

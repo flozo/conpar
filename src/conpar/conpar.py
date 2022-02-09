@@ -13,8 +13,8 @@ import functions as fn
 
 
 # Define version string
-version_num = '0.1'
-version_dat = '2022-02-06'
+version_num = '0.2'
+version_dat = '2022-02-09'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
