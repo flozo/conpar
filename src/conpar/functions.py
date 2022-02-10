@@ -18,13 +18,15 @@ class Config_settings:
 
 
 class Line(Config_settings):
-    """Define line properties and methods."""
+    """Define single-line properties and methods."""
 
     def __init__(self, rawline, comment_char, section_marker, key_value_sep):
         super().__init__(comment_char, section_marker, key_value_sep)
         self.rawline = rawline
         # Create a version of rawline without leading and trailing spaces
         self.line = self.rawline.strip()
+
+    # Functions for determining content type
 
     def is_comment(self):
         """Check if line is a comment line."""
@@ -74,6 +76,8 @@ class Line(Config_settings):
         else:
             return False
 
+    # Functions for extracting content
+
     def comment(self):
         """If line is comment, return comment content."""
         # Check if line is comment
@@ -98,7 +102,7 @@ class Line(Config_settings):
 
 
 class Configuration(Config_settings):
-    """Define configuration settings."""
+    """Define configuration properties and methods."""
 
     def __init__(self, rawlines, comment_char, section_marker, key_value_sep):
         super().__init__(comment_char, section_marker, key_value_sep)
@@ -161,7 +165,7 @@ class Configuration(Config_settings):
                 clean_lines.append(content)
         return clean_lines
 
-    def dataframe(self):
+    def to_dataframe(self):
         """Create Pandas DataFrame with all information."""
         cfg_dict = {
             'type': self.get_types(),
@@ -171,12 +175,12 @@ class Configuration(Config_settings):
             }
         return pd.DataFrame(cfg_dict)
 
-    def dictionary(self):
+    def to_dictionary(self):
         """Create dictionary with sections and key-value pairs."""
         # Get series of section heads
-        section_heads = self.dataframe()['content'][self.dataframe()['type'] == 'section_head']
+        section_heads = self.to_dataframe()['content'][self.to_dataframe()['type'] == 'section_head']
         # Get series of key-value pairs
-        key_value_pairs = self.dataframe()['content'][self.dataframe()['type'] == 'key_value_pair']
+        key_value_pairs = self.to_dataframe()['content'][self.to_dataframe()['type'] == 'key_value_pair']
         # Initialize section list
         section = []
         for i, section_head in enumerate(section_heads):
@@ -197,7 +201,30 @@ class Configuration(Config_settings):
     def export_json(self, filename):
         """Export config data to JSON file."""
         with open(filename, 'w') as f:
-            json.dump(self.dictionary(), f, indent=4)
+            json.dump(self.to_dictionary(), f, indent=4)
+
+    def import_json(self, filename):
+        """Read JSON file and write content into nested dictionary."""
+        with open(filename, 'r') as f:
+            config_dict = json.load(f)
+        return config_dict
+
+    def from_dictionary(self, json_dict):
+        """Convert JSON dict to labeled dict."""
+        # df = pd.DataFrame.from_dict(json_dict)
+        sections = list(json_dict.keys())
+        keys = list(list(json_dict.values())[0].keys())
+        values = list(list(json_dict.values())[0].values())
+        key_value_pairs = list(zip(keys, values))
+        list1 = []
+        for i, section in enumerate(sections):
+            keys = list(list(json_dict.values())[i].keys())
+            values = list(list(json_dict.values())[i].values())
+            key_value_pairs = list(zip(keys, values))
+            list1.append(section)
+            for pair in key_value_pairs:
+                list1.append(pair)
+        return list1
 
 
 def filetolist(inputfile):
