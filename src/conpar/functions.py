@@ -4,6 +4,7 @@
 
 import os
 import pandas as pd
+import json
 
 
 class Config_settings:
@@ -192,6 +193,11 @@ class Configuration(Config_settings):
         # Return dictionary with section heads as first-level keys and
         # sub-dictionaries with key-value pairs as values
         return dict(zip(section_heads, section))
+
+    def export_json(self, filename):
+        """Export config data to JSON file."""
+        with open(filename, 'w') as f:
+            json.dump(self.dictionary(), f, indent=4)
 
 
 def filetolist(inputfile):
