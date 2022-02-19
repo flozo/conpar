@@ -17,6 +17,20 @@ class Color(object):
         self.reset = reset
 
 
+class Message(object):
+    """Define messages for command-line output."""
+
+    def __init__(self, arg_all, arg_raw, arg_parse, arg_dict, arg_ini,
+                 read_file, warn_comments):
+        self.arg_all = arg_all
+        self.arg_raw = arg_raw
+        self.arg_parse = arg_parse
+        self.arg_dict = arg_dict
+        self.arg_ini = arg_ini
+        self.read_file = read_file
+        self.warn_comments = warn_comments
+
+
 class Config_settings:
     """Define configuration settings."""
 

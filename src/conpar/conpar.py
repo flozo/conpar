@@ -99,6 +99,7 @@ def main():
                      'section_marker': args.section_marker,
                      'key_value_sep': args.assignment_char,
                      }
+
     # Define colors for command-line output
     colors_dict = {'message': Fore.YELLOW,
                    'warning': Fore.RED,
@@ -106,44 +107,58 @@ def main():
                    'reset': Style.RESET_ALL,
                    }
 
+    # Create color object
     color = fn.Color(**colors_dict)
 
-    print(color.detail + str(args))
-    print(Style.RESET_ALL, end="")
+    # Define command-line messages
+    msg_dict = {
+        'arg_all': '{}[read] Optional argument \'--all\' = \'--raw '
+                   '--parse --dictionary\'{}'.format(color.message,
+                                                     color.reset),
+        'arg_raw': '{}[read] Optional argument \'--raw\': Showing '
+                   'raw lines of config file ...{}'.format(color.message,
+                                                           color.reset),
+        'arg_parse': '{}[read] Optional argument \'--parse\': Showing '
+                     'parsing result of config file '
+                     '...{}'.format(color.message, color.reset),
+        'arg_dict': '{}[read] Optional argument \'--dictionary\': Showing '
+                    'dictionary representation of config file '
+                    '...{}'.format(color.message,
+                                   color.reset),
+        'arg_ini': 'Bla',
+        'read_file': '{}[read] Reading file: \'{}\'{}'.format(color.message,
+                                                              args.infile,
+                                                              color.reset),
+        'warn_comments': '{}[warning] Comments and blank lines are not '
+                         'supported!{}'.format(color.warning,
+                                               color.reset),
+        }
+
+    # Create message object
+    msg = fn.Message(**msg_dict)
+
+    print(color.detail + str(args) + color.reset)
 
     if (args.command in ('read', 'rea', 're', 'r', 'rd') or
             args.command in ('conver', 'conve', 'conv', 'con', 'co', 'c')):
         rawlines = fn.filetolist(args.infile)
 
     if args.command in ('read', 'rea', 're', 'r', 'rd'):
-        print('{}[read] Reading file: \'{}\'{}'.format(color.message,
-                                                       args.infile,
-                                                       color.reset))
+        print(msg.read_file)
         # print(color.reset, end="")
         cfg = fn.Configuration(rawlines, **settings_dict)
         if args.all:
-            print('{}[read] Optional argument \'--all\' = \'--raw '
-                  '--parse --dictionary\'{}'.format(color.message,
-                                                    color.reset))
+            print(msg.arg_all)
         if args.raw or args.all:
-            print('{}[read] Optional argument \'--raw\': Showing '
-                  'raw lines of config file ...{}'.format(color.message,
-                                                          color.reset))
+            print(msg.arg_raw)
             fn.printlist(rawlines)
         if args.parse or args.all:
-            print('{}[read] Optional argument \'--parse\': Showing parsing '
-                  'result of config file ...{}'.format(color.message,
-                                                       color.reset))
+            print(msg.arg_parse)
             cfg_df = cfg.to_dataframe()
             print(cfg_df)
         if args.dictionary or args.all:
-            print('{}[read] Optional argument \'--dictionary\': Showing '
-                  'dictionary representation of config file '
-                  '...{}'.format(color.message,
-                                 color.reset))
-            print('{}[warning] Comments and blank lines are not '
-                  'supported!{}'.format(color.warning,
-                                        color.reset))
+            print(msg.arg_dict)
+            print(msg.warn_comments)
             cfg_dict = cfg.to_dictionary()
             fn.printdict(cfg_dict)
 
