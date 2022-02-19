@@ -7,6 +7,16 @@ import pandas as pd
 import json
 
 
+class Color(object):
+    """Define colors for command-line output."""
+
+    def __init__(self, message, warning, detail, reset):
+        self.message = message
+        self.warning = warning
+        self.detail = detail
+        self.reset = reset
+
+
 class Config_settings:
     """Define configuration settings."""
 

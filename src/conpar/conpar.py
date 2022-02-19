@@ -5,7 +5,8 @@
 # Import modules
 import argparse
 import functions as fn
-
+from colorama import init, Fore, Style
+init()
 
 # Define version string
 version_num = '0.3'
@@ -93,38 +94,56 @@ def main():
     if verbosity >= 1:
         print(args)
 
-    print(args)
-
     # Create config-settings object using specified arguments
     settings_dict = {'comment_char': args.comment_char,
                      'section_marker': args.section_marker,
                      'key_value_sep': args.assignment_char,
                      }
-    # config_settings = fn.Config_settings(**settings_dict)
+    # Define colors for command-line output
+    colors_dict = {'message': Fore.YELLOW,
+                   'warning': Fore.RED,
+                   'detail': Style.BRIGHT + Fore.MAGENTA,
+                   'reset': Style.RESET_ALL,
+                   }
+
+    color = fn.Color(**colors_dict)
+
+    print(color.detail + str(args))
+    print(Style.RESET_ALL, end="")
 
     if (args.command in ('read', 'rea', 're', 'r', 'rd') or
             args.command in ('conver', 'conve', 'conv', 'con', 'co', 'c')):
         rawlines = fn.filetolist(args.infile)
 
     if args.command in ('read', 'rea', 're', 'r', 'rd'):
-        print('[read] Reading file: \'{}\''.format(args.infile))
+        print('{}[read] Reading file: \'{}\'{}'.format(color.message,
+                                                       args.infile,
+                                                       color.reset))
+        # print(color.reset, end="")
         cfg = fn.Configuration(rawlines, **settings_dict)
         if args.all:
-            print('[read] Optional argument \'--all\' = \'--raw --parse '
-                  '--dictionary\'')
+            print('{}[read] Optional argument \'--all\' = \'--raw '
+                  '--parse --dictionary\'{}'.format(color.message,
+                                                    color.reset))
         if args.raw or args.all:
-            print('[read] Optional argument \'--raw\': Showing raw lines of '
-                  'config file ...')
+            print('{}[read] Optional argument \'--raw\': Showing '
+                  'raw lines of config file ...{}'.format(color.message,
+                                                          color.reset))
             fn.printlist(rawlines)
         if args.parse or args.all:
-            print('[read] Optional argument \'--parse\': Showing parsing '
-                  'result of config file ...')
+            print('{}[read] Optional argument \'--parse\': Showing parsing '
+                  'result of config file ...{}'.format(color.message,
+                                                       color.reset))
             cfg_df = cfg.to_dataframe()
             print(cfg_df)
         if args.dictionary or args.all:
-            print('[read] Optional argument \'--dictionary\': Showing '
-                  'dictionary representation of config file ...')
-            print('[warning] Comments and blank lines are not supported!')
+            print('{}[read] Optional argument \'--dictionary\': Showing '
+                  'dictionary representation of config file '
+                  '...{}'.format(color.message,
+                                 color.reset))
+            print('{}[warning] Comments and blank lines are not '
+                  'supported!{}'.format(color.warning,
+                                        color.reset))
             cfg_dict = cfg.to_dictionary()
             fn.printdict(cfg_dict)
 
