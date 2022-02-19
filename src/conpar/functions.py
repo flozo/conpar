@@ -168,19 +168,22 @@ class Configuration(Config_settings):
     def to_dataframe(self):
         """Create Pandas DataFrame with all information."""
         cfg_dict = {
-            'type': self.get_types(),
-            'content': self.get_content(),
-            'raw': self.rawlines,
-            'formatted': self.formatted(),
+            'TYPE': self.get_types(),
+            'CONTENT': self.get_content(),
+            'RAW': self.rawlines,
+            'FORMATTED': self.formatted(),
             }
-        return pd.DataFrame(cfg_dict)
+        df = pd.DataFrame(cfg_dict)
+        # Label unnamed auto-index
+        df.index.name = 'LINE'
+        return df
 
     def to_dictionary(self):
         """Create dictionary with sections and key-value pairs."""
         # Get series of section heads
-        section_heads = self.to_dataframe()['content'][self.to_dataframe()['type'] == 'section_head']
+        section_heads = self.to_dataframe()['CONTENT'][self.to_dataframe()['TYPE'] == 'section_head']
         # Get series of key-value pairs
-        key_value_pairs = self.to_dataframe()['content'][self.to_dataframe()['type'] == 'key_value_pair']
+        key_value_pairs = self.to_dataframe()['CONTENT'][self.to_dataframe()['TYPE'] == 'key_value_pair']
         # Initialize section list
         section = []
         for i, section_head in enumerate(section_heads):
@@ -266,6 +269,12 @@ def listtofile(outputfile, lines):
     with open(outputfile, 'w', encoding='utf-8') as f:
         for line in lines:
             f.write(line + '\n')
+
+
+def printlist(rawlines):
+    """Print all lines."""
+    for line in rawlines:
+        print(line)
 
 
 def check_config_dir(config_dir):

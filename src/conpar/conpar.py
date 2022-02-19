@@ -4,17 +4,12 @@
 
 # Import modules
 import argparse
-# import os
 import functions as fn
-# import pandas as pd
-# import json
-# import datetime
-# import uuid
 
 
 # Define version string
-version_num = '0.2'
-version_dat = '2022-02-09'
+version_num = '0.3'
+version_dat = '2022-02-19'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -35,37 +30,59 @@ def main():
     parent_parser = argparse.ArgumentParser(add_help=False)
 
     # Common options for all subparsers based on parent parser
-    parent_parser.add_argument('filename', help='name of configuration file')
+    parent_parser.add_argument('infile', help='name of configuration file')
     parent_parser.add_argument('-v', '--verbose', action='count', default=0,
-                               help='verbosity level (-v, -vv, -vvv)')
+                               help='verbosity level (-v, -vv)')
     parent_parser.add_argument('-q', '--quiet', action='store_true',
-                               help='disable terminal output (terminates all verbosity)')
+                               help='disable terminal output (terminates all '
+                               'verbosity)')
     parent_parser.add_argument('-D', '--dry-run', dest='dry',
                                action='store_true',
                                help='simulate execution of command')
 
-    # Subparser settings
-    settings_parser = subparsers.add_parser('settings',
-                                         aliases=['setting', 'settin', 'setti',
-                                                  'sett', 'set', 'se', 's'],
-                                         parents=[parent_parser],
-                                         description='edit settings',
-                                         add_help=True)
-    settings_parser.add_argument('-s', '--show', action='store_true',
-                                           help='show settings')
-    settings_parser.add_argument('-o', '--open',
-                                           help='open settings file with '
-                                           'default editor')
+    # Subparser read
+    read_parser = subparsers.add_parser('read',
+                                        aliases=['rea', 're', 'r', 'rd'],
+                                        parents=[parent_parser],
+                                        description='read config file',
+                                        add_help=True)
+    read_parser.add_argument('-c', '--comment',
+                             default='#',
+                             dest='comment_char',
+                             help='define comment character (default: \'#\')')
+    read_parser.add_argument('-s', '--section',
+                             default='[]',
+                             dest='section_marker',
+                             help='define section marker(s): first character='
+                             'opening marker, second character=closing marker '
+                             '(default: \'[]\')')
+    read_parser.add_argument('-a', '--assignment',
+                             default='=',
+                             dest='assignment_char',
+                             help='define assignment character '
+                             '(default: \'=\')')
 
-    # Subparser create
-    create_parser = subparsers.add_parser('create',
-                                         aliases=['creat', 'crea', 'cre',
-                                                  'cr', 'c'],
-                                         parents=[parent_parser],
-                                         description='create table',
-                                         add_help=True)
-    create_parser.add_argument('table_name', help='table name')
-    create_parser.add_argument('column_name', nargs='*', help='column name')
+    read_parser.add_argument('-r', '--raw', action='store_true',
+                             help='show raw lines of config file')
+    read_parser.add_argument('-p', '--parse', action='store_true',
+                             help='show parsing result of config file on a '
+                             'per-line basis')
+    read_parser.add_argument('-d', '--dictionary', action='store_true',
+                             help='show dictionary representation of '
+                             'config file')
+    read_parser.add_argument('-i', '--ini', action='store_true',
+                             help='show ini representation of config file')
+    read_parser.add_argument('-A', '--all', action='store_true',
+                             help='combines optional arguments -rpd')
+
+    # Subparser convert
+    convert_parser = subparsers.add_parser('convert',
+                                           aliases=['conver', 'conve', 'conv',
+                                                    'con', 'co', 'c'],
+                                           parents=[parent_parser],
+                                           description='convert config file',
+                                           add_help=True)
+    convert_parser.add_argument('outfile', help='name of output file')
 
     args = parser.parse_args()
 
@@ -78,28 +95,37 @@ def main():
 
     print(args)
 
-    # # Use settings directory or create one
-    # settings_dir = os.path.expanduser('~/.config/conpar')
-    # fn.check_config_dir(settings_dir)
-    # # Use settings file or create one
-    # settings_file = os.path.join(settings_dir, 'settings.ini')
-    # fn.check_config_file(settings_file)
+    # Create config-settings object using specified arguments
+    settings_dict = {'comment_char': args.comment_char,
+                     'section_marker': args.section_marker,
+                     'key_value_sep': args.assignment_char,
+                     }
+    # config_settings = fn.Config_settings(**settings_dict)
 
+    if (args.command in ('read', 'rea', 're', 'r', 'rd') or
+            args.command in ('conver', 'conve', 'conv', 'con', 'co', 'c')):
+        rawlines = fn.filetolist(args.infile)
 
-# text = fn.read_text(os.path.join(config_dir, 'letter.txt'))
-# text = fn.format_text(text)
-
-    # if args.command in ('settings', 'setting', 'settin', 'setti', 'sett',
-    #                     'set', 'se', 's'):
-    #     if args.show:
-    #         print(fn.read_config(settings_file).get())
-    #     else:
-    #         os.system('xdg-open {}'.format(settings_file))
-
-    # directory = 'Dokumente/Finanzen/Daten'
-    # data_dir = os.path.expanduser('~/{}'.format(directory))
-    # if args.dry:
-    #     print('[dry run] Nothing fetched.')
+    if args.command in ('read', 'rea', 're', 'r', 'rd'):
+        print('[read] Reading file: \'{}\''.format(args.infile))
+        cfg = fn.Configuration(rawlines, **settings_dict)
+        if args.all:
+            print('[read] Optional argument \'--all\' = \'--raw --parse '
+                  '--dictionary\'')
+        if args.raw or args.all:
+            print('[read] Optional argument \'--raw\': Showing raw lines of '
+                  'config file ...')
+            fn.printlist(rawlines)
+        if args.parse or args.all:
+            print('[read] Optional argument \'--parse\': Showing parsing '
+                  'result of config file ...')
+            cfg_df = cfg.to_dataframe()
+            print(cfg_df)
+        if args.dictionary or args.all:
+            print('[read] Optional argument \'--dictionary\': Showing '
+                  'dictionary representation of config file ...')
+            cfg_dict = cfg.to_dictionary()
+            print(cfg_dict)
 
 
 if __name__ == '__main__':
