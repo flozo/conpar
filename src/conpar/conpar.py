@@ -124,8 +124,9 @@ def main():
         if args.dictionary or args.all:
             print('[read] Optional argument \'--dictionary\': Showing '
                   'dictionary representation of config file ...')
+            print('[warning] Comments and blank lines are not supported!')
             cfg_dict = cfg.to_dictionary()
-            print(cfg_dict)
+            fn.printdict(cfg_dict)
 
 
 if __name__ == '__main__':

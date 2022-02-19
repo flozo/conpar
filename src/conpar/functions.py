@@ -277,6 +277,11 @@ def printlist(rawlines):
         print(line)
 
 
+def printdict(dictionary):
+    """Pretty-print dictionary."""
+    print(json.dumps(dictionary, sort_keys=True, indent=4))
+
+
 def check_config_dir(config_dir):
     """Check if config directory exists. If not, ask for creating one."""
     if not os.path.isdir(config_dir):
