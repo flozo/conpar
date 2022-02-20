@@ -21,13 +21,15 @@ class Message(object):
     """Define messages for command-line output."""
 
     def __init__(self, arg_all, arg_raw, arg_parse, arg_dict, arg_ini,
-                 read_file, warn_comments):
+                 read_file, write_file, done, warn_comments):
         self.arg_all = arg_all
         self.arg_raw = arg_raw
         self.arg_parse = arg_parse
         self.arg_dict = arg_dict
         self.arg_ini = arg_ini
         self.read_file = read_file
+        self.write_file = write_file
+        self.done = done
         self.warn_comments = warn_comments
 
 
@@ -296,6 +298,12 @@ def listtofile(outputfile, lines):
             f.write(line + '\n')
 
 
+def dict_to_json(outfile, settings_dict):
+    """Write config file."""
+    with open(outfile, 'w') as f:
+        json.dump(settings_dict, f, indent=4)
+
+
 def printlist(rawlines):
     """Print all lines."""
     for line in rawlines:
@@ -304,7 +312,7 @@ def printlist(rawlines):
 
 def printdict(dictionary):
     """Pretty-print dictionary."""
-    print(json.dumps(dictionary, sort_keys=True, indent=4))
+    print(json.dumps(dictionary, sort_keys=False, indent=4))
 
 
 def check_config_dir(config_dir):

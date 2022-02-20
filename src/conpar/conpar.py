@@ -41,27 +41,29 @@ def main():
                                action='store_true',
                                help='simulate execution of command')
 
+    parent_parser.add_argument('-c', '--comment',
+                               default='#',
+                               dest='comment_char',
+                               help='define comment character '
+                               '(default: \'#\')')
+    parent_parser.add_argument('-s', '--section',
+                               default='[]',
+                               dest='section_marker',
+                               help='define section marker(s): first '
+                               'character=opening marker, second '
+                               'character=closing marker (default: \'[]\')')
+    parent_parser.add_argument('-a', '--assignment',
+                               default='=',
+                               dest='assignment_char',
+                               help='define assignment character '
+                               '(default: \'=\')')
+
     # Subparser read
     read_parser = subparsers.add_parser('read',
                                         aliases=['rea', 're', 'r', 'rd'],
                                         parents=[parent_parser],
                                         description='read config file',
                                         add_help=True)
-    read_parser.add_argument('-c', '--comment',
-                             default='#',
-                             dest='comment_char',
-                             help='define comment character (default: \'#\')')
-    read_parser.add_argument('-s', '--section',
-                             default='[]',
-                             dest='section_marker',
-                             help='define section marker(s): first character='
-                             'opening marker, second character=closing marker '
-                             '(default: \'[]\')')
-    read_parser.add_argument('-a', '--assignment',
-                             default='=',
-                             dest='assignment_char',
-                             help='define assignment character '
-                             '(default: \'=\')')
 
     read_parser.add_argument('-r', '--raw', action='store_true',
                              help='show raw lines of config file')
@@ -84,12 +86,12 @@ def main():
                                            description='convert config file',
                                            add_help=True)
     convert_parser.add_argument('outfile', help='name of output file')
-    # convert_parser.add_argument('-j', '--json',
-    #                             action='store_true',
-    #                             help='convert to JSON file')
-    # convert_parser.add_argument('-i', '--ini',
-    #                             action='store_true',
-    #                             help='convert to INI file')
+    convert_parser.add_argument('-j', '--json',
+                                action='store_true',
+                                help='convert to JSON file')
+    convert_parser.add_argument('-i', '--ini',
+                                action='store_true',
+                                help='convert to INI file')
 
     args = parser.parse_args()
 
@@ -116,11 +118,18 @@ def main():
     # Create color object
     color = fn.Color(**colors_dict)
 
+    # Handle undefined args.outfile
+    if args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
+                        'c'):
+        outfile = args.outfile
+    else:
+        outfile = ''
+
     # Define command-line messages
     msg_dict = {
         'arg_all': '{}[read] Optional argument \'--all\' = \'--raw '
                    '--parse --json\'{}'.format(color.message,
-                                                     color.reset),
+                                               color.reset),
         'arg_raw': '{}[read] Optional argument \'--raw\': Showing '
                    'raw lines of config file ...{}'.format(color.message,
                                                            color.reset),
@@ -132,9 +141,16 @@ def main():
                     '...{}'.format(color.message,
                                    color.reset),
         'arg_ini': 'Bla',
-        'read_file': '{}[read] Reading file: \'{}\'{}'.format(color.message,
-                                                              args.infile,
-                                                              color.reset),
+        'read_file': '{}[read] Reading file: '
+        '\'{}\' ...{}'.format(color.message,
+                              args.infile,
+                              color.reset),
+        'write_file': '{}[convert] Writing file: '
+                      '\'{}\' ...{}'.format(color.message,
+                                            outfile,
+                                            color.reset),
+        'done': '{} DONE!{}'.format(color.message,
+                                    color.reset),
         'warn_comments': '{}[warning] Comments and blank lines are not '
                          'supported!{}'.format(color.warning,
                                                color.reset),
@@ -146,12 +162,13 @@ def main():
     print(color.detail + str(args) + color.reset)
 
     if (args.command in ('read', 'rea', 're', 'r', 'rd') or
-            args.command in ('conver', 'conve', 'conv', 'con', 'co', 'c')):
+            args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
+                             'c')):
+        print(msg.read_file, end='')
         rawlines = fn.filetolist(args.infile)
+        print(msg.done)
 
     if args.command in ('read', 'rea', 're', 'r', 'rd'):
-        print(msg.read_file)
-        # print(color.reset, end="")
         cfg = fn.Configuration(rawlines, **settings_dict)
         if args.all:
             print(msg.arg_all)
@@ -167,6 +184,19 @@ def main():
             print(msg.warn_comments)
             cfg_dict = cfg.to_dictionary()
             fn.printdict(cfg_dict)
+
+    if args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
+                        'c'):
+        # print(msg.read_file)
+        cfg = fn.Configuration(rawlines, **settings_dict)
+        if args.json:
+            print(msg.arg_dict)
+            print(msg.warn_comments)
+            cfg_dict = cfg.to_dictionary()
+            fn.printdict(cfg_dict)
+            print(msg.write_file, end='')
+            print(msg.done)
+            fn.dict_to_json(args.outfile, cfg_dict)
 
 
 if __name__ == '__main__':
