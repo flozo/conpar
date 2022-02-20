@@ -68,13 +68,13 @@ def main():
     read_parser.add_argument('-p', '--parse', action='store_true',
                              help='show parsing result of config file on a '
                              'per-line basis')
-    read_parser.add_argument('-d', '--dictionary', action='store_true',
-                             help='show dictionary representation of '
-                             'config file')
+    read_parser.add_argument('-j', '--json', action='store_true',
+                             help='show JSON representation of config file '
+                             '(comments and blank lines are ignored)')
     read_parser.add_argument('-i', '--ini', action='store_true',
-                             help='show ini representation of config file')
+                             help='show INI representation of config file')
     read_parser.add_argument('-A', '--all', action='store_true',
-                             help='combines optional arguments -rpd')
+                             help='combines optional arguments -rpj')
 
     # Subparser convert
     convert_parser = subparsers.add_parser('convert',
@@ -84,6 +84,12 @@ def main():
                                            description='convert config file',
                                            add_help=True)
     convert_parser.add_argument('outfile', help='name of output file')
+    # convert_parser.add_argument('-j', '--json',
+    #                             action='store_true',
+    #                             help='convert to JSON file')
+    # convert_parser.add_argument('-i', '--ini',
+    #                             action='store_true',
+    #                             help='convert to INI file')
 
     args = parser.parse_args()
 
@@ -113,7 +119,7 @@ def main():
     # Define command-line messages
     msg_dict = {
         'arg_all': '{}[read] Optional argument \'--all\' = \'--raw '
-                   '--parse --dictionary\'{}'.format(color.message,
+                   '--parse --json\'{}'.format(color.message,
                                                      color.reset),
         'arg_raw': '{}[read] Optional argument \'--raw\': Showing '
                    'raw lines of config file ...{}'.format(color.message,
@@ -121,8 +127,8 @@ def main():
         'arg_parse': '{}[read] Optional argument \'--parse\': Showing '
                      'parsing result of config file '
                      '...{}'.format(color.message, color.reset),
-        'arg_dict': '{}[read] Optional argument \'--dictionary\': Showing '
-                    'dictionary representation of config file '
+        'arg_dict': '{}[read] Optional argument \'--json\': Showing '
+                    'JSON representation of config file '
                     '...{}'.format(color.message,
                                    color.reset),
         'arg_ini': 'Bla',
@@ -156,7 +162,7 @@ def main():
             print(msg.arg_parse)
             cfg_df = cfg.to_dataframe()
             print(cfg_df)
-        if args.dictionary or args.all:
+        if args.json or args.all:
             print(msg.arg_dict)
             print(msg.warn_comments)
             cfg_dict = cfg.to_dictionary()
