@@ -13,7 +13,7 @@ long_description = (here/'README.md').read_text(encoding='utf-8')
 
 setup(
         name='conpar',
-        version='0.3',
+        version='0.4',
         description='A parser for configuration files.',
         long_description=long_description,
         long_description_content_type='text/markdown',

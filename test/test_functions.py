@@ -24,7 +24,7 @@ def test_is_comment():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line in line_iscomment_true:
         assert fn.Line(line, **cfg).is_comment() is True
@@ -47,7 +47,7 @@ def test_is_empty():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line in line_isempty_true:
         assert fn.Line(line, **cfg).is_empty() is True
@@ -70,7 +70,7 @@ def test_is_key_value_pair():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line in line_iskeyvaluepair_true:
         assert fn.Line(line, **cfg).is_key_value_pair() is True
@@ -95,7 +95,7 @@ def test_is_section():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line in line_issection_true:
         assert fn.Line(line, **cfg).is_section() is True
@@ -128,7 +128,7 @@ def test_is_unknown():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line in line_is_unknown_true:
         assert fn.Line(line, **cfg).is_unknown() is True
@@ -153,7 +153,7 @@ def test_comment():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line_in, line_out in zip(line_comments_raw, line_comments_content):
         assert fn.Line(line_in, **cfg).comment() == line_out
@@ -178,7 +178,7 @@ def test_section_name():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line_in, line_out in zip(line_section_name_raw,
                                  line_section_name_content):
@@ -200,7 +200,7 @@ def test_key_value_pair():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     for line_in, line_out in zip(line_key_value_raw, line_key_value_content):
         assert fn.Line(line_in, **cfg).key_value_pair() == line_out
@@ -247,7 +247,7 @@ def test_get_types():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     assert fn.Configuration(rawlines, **cfg).get_types() == types
 
@@ -293,7 +293,7 @@ def test_get_content():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     assert fn.Configuration(rawlines, **cfg).get_content() == content
 
@@ -323,6 +323,6 @@ def test_formatted():
         ]
     cfg = {'comment_char': '#',
            'section_marker': '[]',
-           'key_value_sep': '=',
+           'assignment_char': '=',
            }
     assert fn.Configuration(rawlines, **cfg).formatted() == formatted

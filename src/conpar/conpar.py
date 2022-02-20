@@ -9,8 +9,8 @@ from colorama import init, Fore, Style
 init()
 
 # Define version string
-version_num = '0.3'
-version_dat = '2022-02-19'
+version_num = '0.4'
+version_dat = '2022-02-20'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -97,7 +97,7 @@ def main():
     # Create config-settings object using specified arguments
     settings_dict = {'comment_char': args.comment_char,
                      'section_marker': args.section_marker,
-                     'key_value_sep': args.assignment_char,
+                     'assignment_char': args.assignment_char,
                      }
 
     # Define colors for command-line output

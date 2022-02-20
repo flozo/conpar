@@ -35,17 +35,17 @@ class Config_settings:
     """Define configuration settings."""
 
     def __init__(self, comment_char='#', section_marker='[]',
-                 key_value_sep='='):
+                 assignment_char='='):
         self.comment_char = comment_char
         self.section_marker = section_marker
-        self.key_value_sep = key_value_sep
+        self.assignment_char = assignment_char
 
 
 class Line(Config_settings):
     """Define single-line properties and methods."""
 
-    def __init__(self, rawline, comment_char, section_marker, key_value_sep):
-        super().__init__(comment_char, section_marker, key_value_sep)
+    def __init__(self, rawline, comment_char, section_marker, assignment_char):
+        super().__init__(comment_char, section_marker, assignment_char)
         self.rawline = rawline
         # Create a version of rawline without leading and trailing spaces
         self.line = self.rawline.strip()
@@ -72,7 +72,7 @@ class Line(Config_settings):
 
     def is_key_value_pair(self):
         """Check if line contains a key-value separator."""
-        if self.key_value_sep in self.line:
+        if self.assignment_char in self.line:
             return True
         else:
             return False
@@ -114,8 +114,8 @@ class Line(Config_settings):
         # Check if line is a key-value pair
         if self.is_key_value_pair() is True:
             # Return key and value strings without leading and trailing spaces
-            return (self.line.split(self.key_value_sep)[0].strip(),
-                    self.line.split(self.key_value_sep)[1].strip(),)
+            return (self.line.split(self.assignment_char)[0].strip(),
+                    self.line.split(self.assignment_char)[1].strip(),)
 
     def section_name(self):
         """If line is section head, return section name."""
@@ -128,8 +128,9 @@ class Line(Config_settings):
 class Configuration(Config_settings):
     """Define configuration properties and methods."""
 
-    def __init__(self, rawlines, comment_char, section_marker, key_value_sep):
-        super().__init__(comment_char, section_marker, key_value_sep)
+    def __init__(self, rawlines, comment_char, section_marker,
+                 assignment_char):
+        super().__init__(comment_char, section_marker, assignment_char)
         self.rawlines = rawlines
 
     def get_types(self):
@@ -137,7 +138,7 @@ class Configuration(Config_settings):
         types = []
         for rawline in self.rawlines:
             line = Line(rawline, self.comment_char, self.section_marker,
-                        self.key_value_sep)
+                        self.assignment_char)
             if line.is_comment() is True:
                 types.append('comment')
             elif line.is_empty() is True:
@@ -155,7 +156,7 @@ class Configuration(Config_settings):
         content = []
         for rawline in self.rawlines:
             line = Line(rawline, self.comment_char, self.section_marker,
-                        self.key_value_sep)
+                        self.assignment_char)
             if line.is_comment() is True:
                 content.append(line.comment())
             elif line.is_empty() is True:
@@ -183,7 +184,7 @@ class Configuration(Config_settings):
                 clean_lines.append(sec_line)
             elif line_type == 'key_value_pair':
                 clean_lines.append('{} {} {}'.format(content[0],
-                                                     self.key_value_sep,
+                                                     self.assignment_char,
                                                      content[1]))
             else:
                 clean_lines.append(content)
