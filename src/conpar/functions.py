@@ -33,7 +33,7 @@ class Message(object):
         self.warn_comments = warn_comments
 
 
-class Config_settings:
+class Config_settings(object):
     """Define configuration settings."""
 
     def __init__(self, comment_char='#', section_marker='[]',
@@ -205,6 +205,10 @@ class Configuration(Config_settings):
         df.index.name = 'LINE'
         return df
 
+    def count_types(self):
+        """Return frequencies of config-file line types."""
+        return self.to_dataframe()['TYPE'].value_counts()
+
     def to_dictionary(self):
         """Create dictionary with sections and key-value pairs."""
         # Get series of section heads
@@ -313,6 +317,45 @@ def printlist(rawlines):
 def printdict(dictionary):
     """Pretty-print dictionary."""
     print(json.dumps(dictionary, sort_keys=False, indent=4))
+
+
+def is_json_str(string):
+    """Check if string is JSON."""
+    try:
+        json.loads(string)
+    except ValueError:
+        return False
+    return True
+
+
+def is_json_file(infile):
+    """Check if file is JSON."""
+    try:
+        with open(infile, 'r') as f:
+            json.load(f)
+    except ValueError:
+        return False
+    return True
+
+
+def is_ini_str(string, comment_char, section_marker, assignment_char):
+    """Check if string is JSON."""
+    # Create line object
+    cfg = Line(string, comment_char, section_marker, assignment_char)
+    # Return opposite of is_unknown() boolean
+    return not(cfg.is_unknown())
+
+
+def is_ini_file(infile, comment_char, section_marker, assignment_char):
+    """Check if string is JSON."""
+    rawlines = filetolist(infile)
+    cfg = Configuration(rawlines, comment_char, section_marker,
+                        assignment_char)
+    # At least one key-value pair is needed:
+    if cfg.count_types()['key_value_pair'] > 0:
+        return True
+    else:
+        return False
 
 
 def check_config_dir(config_dir):
