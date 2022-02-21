@@ -5,12 +5,12 @@
 # Import modules
 import argparse
 import functions as fn
-from colorama import init, Fore, Style
-init()
+import defaults as dflt
+
 
 # Define version string
-version_num = '0.4'
-version_dat = '2022-02-20'
+version_num = '0.5'
+version_dat = '2022-02-21'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -109,11 +109,7 @@ def main():
                      }
 
     # Define colors for command-line output
-    colors_dict = {'message': Fore.YELLOW,
-                   'warning': Fore.RED,
-                   'detail': Style.BRIGHT + Fore.MAGENTA,
-                   'reset': Style.RESET_ALL,
-                   }
+    colors_dict = dflt.colors()
 
     # Create color object
     color = fn.Color(**colors_dict)
@@ -126,35 +122,7 @@ def main():
         outfile = ''
 
     # Define command-line messages
-    msg_dict = {
-        'arg_all': '{}[read] Optional argument \'--all\' = \'--raw '
-                   '--parse --json\'{}'.format(color.message,
-                                               color.reset),
-        'arg_raw': '{}[read] Optional argument \'--raw\': Showing '
-                   'raw lines of config file ...{}'.format(color.message,
-                                                           color.reset),
-        'arg_parse': '{}[read] Optional argument \'--parse\': Showing '
-                     'parsing result of config file '
-                     '...{}'.format(color.message, color.reset),
-        'arg_dict': '{}[read] Optional argument \'--json\': Showing '
-                    'JSON representation of config file '
-                    '...{}'.format(color.message,
-                                   color.reset),
-        'arg_ini': 'Bla',
-        'read_file': '{}[read] Reading file: '
-        '\'{}\' ...{}'.format(color.message,
-                              args.infile,
-                              color.reset),
-        'write_file': '{}[convert] Writing file: '
-                      '\'{}\' ...{}'.format(color.message,
-                                            outfile,
-                                            color.reset),
-        'done': '{} DONE!{}'.format(color.message,
-                                    color.reset),
-        'warn_comments': '{}[warning] Comments and blank lines are not '
-                         'supported!{}'.format(color.warning,
-                                               color.reset),
-        }
+    msg_dict = dflt.messages(color, args.infile, outfile)
 
     # Create message object
     msg = fn.Message(**msg_dict)
@@ -187,7 +155,6 @@ def main():
 
     if args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
                         'c'):
-        # print(msg.read_file)
         cfg = fn.Configuration(rawlines, **settings_dict)
         if args.json:
             print(msg.arg_dict)

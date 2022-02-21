@@ -13,11 +13,11 @@ long_description = (here/'README.md').read_text(encoding='utf-8')
 
 setup(
         name='conpar',
-        version='0.4',
+        version='0.5',
         description='A parser for configuration files.',
         long_description=long_description,
         long_description_content_type='text/markdown',
-        # url='https://github.com/flozo/Reponame',
+        url='https://github.com/flozo/conpar',
         author='flozo',
         author_email='github.mail@flozo.de',
         # Classifiers from https://pypi.org/classifiers/
