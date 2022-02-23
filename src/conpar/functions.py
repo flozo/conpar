@@ -206,8 +206,17 @@ class Configuration(Config_settings):
         return df
 
     def count_types(self):
-        """Return frequencies of config-file line types."""
-        return self.to_dataframe()['TYPE'].value_counts()
+        """Return dict with frequencies of config-file line types."""
+        type_count = self.to_dataframe()['TYPE'].value_counts()
+        types = [
+            'comment',
+            'empty',
+            'section_head',
+            'key_value_pair',
+            'unknown'
+            ]
+        return dict(type_count.reindex(types, fill_value=0))
+        # .rename_axis('TYPE').reset_index(name='COUNTS')
 
     def to_dictionary(self):
         """Create dictionary with sections and key-value pairs."""
@@ -261,13 +270,13 @@ class Configuration(Config_settings):
         return list1
 
 
-def filetolist(inputfile):
+def filetolist(infile):
     """
     Read file into list line by line.
 
     Parameters
     ----------
-    inputfile : string
+    infile : string
         name of input file.
 
     Returns
@@ -275,20 +284,20 @@ def filetolist(inputfile):
     lines : list of strings
         list of file rows.
     """
-    with open(inputfile, 'r', encoding='utf-8') as f:
+    with open(infile, 'r', encoding='utf-8') as f:
         lines = []
         for line in f:
             lines.append(line.rstrip())
     return lines
 
 
-def listtofile(outputfile, lines):
+def listtofile(outfile, lines):
     """
     Write list to file.
 
     Parameters
     ----------
-    outputfile : string
+    outfile : string
         filename for output.
     listname : list of strings
         list to be written to file.
@@ -297,7 +306,7 @@ def listtofile(outputfile, lines):
     -------
     None.
     """
-    with open(outputfile, 'w', encoding='utf-8') as f:
+    with open(outfile, 'w', encoding='utf-8') as f:
         for line in lines:
             f.write(line + '\n')
 
@@ -352,6 +361,7 @@ def is_ini_file(infile, comment_char, section_marker, assignment_char):
     cfg = Configuration(rawlines, comment_char, section_marker,
                         assignment_char)
     # At least one key-value pair is needed:
+    print(cfg.count_types()['key_value_pair'])
     if cfg.count_types()['key_value_pair'] > 0:
         return True
     else:
