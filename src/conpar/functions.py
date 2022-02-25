@@ -117,7 +117,7 @@ class Line(Config_settings):
         if self.is_key_value_pair() is True:
             # Return key and value strings without leading and trailing spaces
             return (self.line.split(self.assignment_char)[0].strip(),
-                    self.line.split(self.assignment_char)[1].strip(),)
+                    self.line.split(self.assignment_char)[1].strip())
 
     def section_name(self):
         """If line is section head, return section name."""
@@ -171,27 +171,6 @@ class Configuration(Config_settings):
                 content.append(line.rawline)
         return content
 
-    def formatted(self):
-        """Create nicely formatted config-file lines."""
-        clean_lines = []
-        for line_type, content in zip(self.get_types(), self.get_content()):
-            if line_type == 'comment':
-                clean_lines.append('{} {}'.format(self.comment_char, content))
-            elif line_type == 'empty':
-                clean_lines.append('')
-            elif line_type == 'section_head':
-                sec_line = '{} {}'.format(self.section_marker[0], content)
-                if len(self.section_marker) == 2:
-                    sec_line = sec_line + ' ' + self.section_marker[1]
-                clean_lines.append(sec_line)
-            elif line_type == 'key_value_pair':
-                clean_lines.append('{} {} {}'.format(content[0],
-                                                     self.assignment_char,
-                                                     content[1]))
-            else:
-                clean_lines.append(content)
-        return clean_lines
-
     def to_dataframe(self):
         """Create Pandas DataFrame with all information."""
         cfg_dict = {
@@ -220,10 +199,11 @@ class Configuration(Config_settings):
 
     def to_dictionary(self):
         """Create dictionary with sections and key-value pairs."""
+        df = self.to_dataframe()
         # Get series of section heads
-        section_heads = self.to_dataframe()['CONTENT'][self.to_dataframe()['TYPE'] == 'section_head']
+        section_heads = df['CONTENT'][df['TYPE'] == 'section_head']
         # Get series of key-value pairs
-        key_value_pairs = self.to_dataframe()['CONTENT'][self.to_dataframe()['TYPE'] == 'key_value_pair']
+        key_value_pairs = df['CONTENT'][df['TYPE'] == 'key_value_pair']
         # Initialize section list
         section = []
         for i, section_head in enumerate(section_heads):
@@ -268,6 +248,63 @@ class Configuration(Config_settings):
             for pair in key_value_pairs:
                 list1.append(pair)
         return list1
+
+
+def formatted(types, content, comment_char, section_marker, assignment_char):
+    """Create nicely formatted config-file lines."""
+    clean_lines = []
+    for line_type, content in zip(types, content):
+        if line_type == 'comment':
+            clean_lines.append('{} {}'.format(comment_char, content))
+        elif line_type == 'empty':
+            clean_lines.append('')
+        elif line_type == 'section_head':
+            sec_line = '{} {}'.format(section_marker[0], content)
+            if len(section_marker) == 2:
+                sec_line = sec_line + ' ' + section_marker[1]
+            clean_lines.append(sec_line)
+        elif line_type == 'key_value_pair':
+            clean_lines.append('{} {} {}'.format(content[0],
+                                                 assignment_char,
+                                                 content[1]))
+        else:
+            clean_lines.append(content)
+    return clean_lines
+
+
+def list_get_types(lines_list):
+    types = []
+    for line in lines_list:
+        if type(line) is tuple:
+            types.append('key_value_pair')
+        else:
+            types.append('section_head')
+    return types
+
+
+def ini_to_dataframe(lines_list, comment_char, section_marker, assignment_char):
+    types = list_get_types(lines_list)
+    cfg_dict = {
+        'TYPE': types,
+        'CONTENT': lines_list,
+        'FORMATTED': formatted(types, lines_list, comment_char, section_marker, assignment_char)
+        }
+    df = pd.DataFrame(cfg_dict)
+    # Label unnamed auto-index
+    df.index.name = 'LINE'
+    return df
+
+
+def dataframe_to_ini_list(df):
+    types = list(df['TYPE'])
+    contents = list(df['FORMATTED'])
+    ini_list = []
+    for i, line in enumerate(types):
+        # Insert blank line before new section, except first one
+        if line == 'section_head' and i > 0:
+            ini_list.append('')
+        ini_list.append(contents[i])
+    return ini_list
 
 
 def filetolist(infile):
@@ -348,7 +385,7 @@ def is_json_file(infile):
 
 
 def is_ini_str(string, comment_char, section_marker, assignment_char):
-    """Check if string is JSON."""
+    """Check if string is INI."""
     # Create line object
     cfg = Line(string, comment_char, section_marker, assignment_char)
     # Return opposite of is_unknown() boolean
@@ -356,7 +393,7 @@ def is_ini_str(string, comment_char, section_marker, assignment_char):
 
 
 def is_ini_file(infile, comment_char, section_marker, assignment_char):
-    """Check if string is JSON."""
+    """Check if string is INI."""
     rawlines = filetolist(infile)
     cfg = Configuration(rawlines, comment_char, section_marker,
                         assignment_char)
@@ -368,14 +405,14 @@ def is_ini_file(infile, comment_char, section_marker, assignment_char):
         return False
 
 
-def check_config_dir(config_dir):
-    """Check if config directory exists. If not, ask for creating one."""
-    if not os.path.isdir(config_dir):
-        print('[config] Config directory {} not found.'.format(config_dir))
-        create_config_dir = input('[config] Create config directory {} ? '
-                                  '(Y/n): '.format(config_dir))
-        if create_config_dir == 'Y':
-            os.makedirs(config_dir)
-            print('[config] Config directory {} created.'.format(config_dir))
-        else:
-            print('[config] No config directory created.')
+# def check_config_dir(config_dir):
+#     """Check if config directory exists. If not, ask for creating one."""
+#     if not os.path.isdir(config_dir):
+#         print('[config] Config directory {} not found.'.format(config_dir))
+#         create_config_dir = input('[config] Create config directory {} ? '
+#                                   '(Y/n): '.format(config_dir))
+#         if create_config_dir == 'Y':
+#             os.makedirs(config_dir)
+#             print('[config] Config directory {} created.'.format(config_dir))
+#         else:
+#             print('[config] No config directory created.')

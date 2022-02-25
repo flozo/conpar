@@ -325,4 +325,31 @@ def test_formatted():
            'section_marker': '[]',
            'assignment_char': '=',
            }
-    assert fn.Configuration(rawlines, **cfg).formatted() == formatted
+    types = fn.Configuration(rawlines, **cfg).get_types()
+    content = fn.Configuration(rawlines, **cfg).get_content()
+    assert fn.formatted(types, content, **cfg) == formatted
+
+
+def test_is_json_str():
+    is_json_str_true = [
+        '{}',
+        '{"key1": "value1"}',
+        '{"key2": "value2", "key3": "value3"}',
+        '{"key4": 1234, "key5": 12.34}',
+        '{"key6": [1, 2, 3]}',
+        ]
+    is_json_str_false = [
+        '{section1}',
+        '{"section2"}',
+        'abcdef',
+        'key7: 1234',
+        '"key8": 1234',
+        '[section3]',
+        'key9 = value9',
+        '# Comment1',
+        '',
+        ]
+    for string in is_json_str_true:
+        assert fn.is_json_str(string) is True
+    for string in is_json_str_false:
+        assert fn.is_json_str(string) is False

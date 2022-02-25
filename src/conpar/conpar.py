@@ -9,8 +9,8 @@ import defaults as dflt
 
 
 # Define version string
-version_num = '0.6'
-version_dat = '2022-02-23'
+version_num = '0.7'
+version_dat = '2022-02-25'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
