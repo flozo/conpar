@@ -10,9 +10,10 @@ import json
 class Color(object):
     """Define colors for command-line output."""
 
-    def __init__(self, message, warning, detail, reset):
+    def __init__(self, message, warning, success, detail, reset):
         self.message = message
         self.warning = warning
+        self.success = success
         self.detail = detail
         self.reset = reset
 
@@ -21,7 +22,9 @@ class Message(object):
     """Define messages for command-line output."""
 
     def __init__(self, arg_all, arg_raw, arg_parse, arg_dict, arg_ini,
-                 read_file, write_file, done, warn_comments):
+                 read_file, write_file, extension, other_extension, test_json,
+                 test_ini, is_json, is_ini, unknown, done, success, failure,
+                 warn_comments):
         self.arg_all = arg_all
         self.arg_raw = arg_raw
         self.arg_parse = arg_parse
@@ -29,7 +32,16 @@ class Message(object):
         self.arg_ini = arg_ini
         self.read_file = read_file
         self.write_file = write_file
+        self.extension = extension
+        self.other_extension = other_extension
+        self.test_json = test_json
+        self.test_ini = test_ini
+        self.is_json = is_json
+        self.is_ini = is_ini
+        self.unknown = unknown
         self.done = done
+        self.success = success
+        self.failure = failure
         self.warn_comments = warn_comments
 
 
@@ -177,7 +189,9 @@ class Configuration(Config_settings):
             'TYPE': self.get_types(),
             'CONTENT': self.get_content(),
             'RAW': self.rawlines,
-            'FORMATTED': self.formatted(),
+            'FORMATTED': formatted(self.get_types(), self.get_content(),
+                                   self.comment_char, self.section_marker,
+                                   self.assignment_char),
             }
         df = pd.DataFrame(cfg_dict)
         # Label unnamed auto-index
@@ -398,7 +412,7 @@ def is_ini_file(infile, comment_char, section_marker, assignment_char):
     cfg = Configuration(rawlines, comment_char, section_marker,
                         assignment_char)
     # At least one key-value pair is needed:
-    print(cfg.count_types()['key_value_pair'])
+    # print(cfg.count_types()['key_value_pair'])
     if cfg.count_types()['key_value_pair'] > 0:
         return True
     else:

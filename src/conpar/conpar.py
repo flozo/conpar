@@ -4,13 +4,14 @@
 
 # Import modules
 import argparse
+import os
 import functions as fn
 import defaults as dflt
 
 
 # Define version string
-version_num = '0.7'
-version_dat = '2022-02-25'
+version_num = '0.8'
+version_dat = '2022-02-27'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -121,8 +122,11 @@ def main():
     else:
         outfile = ''
 
+    # Detect file extension
+    extension = os.path.splitext(args.infile)[-1]
+
     # Define command-line messages
-    msg_dict = dflt.messages(color, args.infile, outfile)
+    msg_dict = dflt.messages(color, args.infile, extension, outfile)
 
     # Create message object
     msg = fn.Message(**msg_dict)
@@ -135,6 +139,43 @@ def main():
         print(msg.read_file, end='')
         rawlines = fn.filetolist(args.infile)
         print(msg.done)
+        if extension in ('.json', '.ini'):
+            print(msg.extension)
+        else:
+            print(msg.other_extension)
+        if extension != '.ini':
+            print(msg.test_json, end='')
+            is_json = fn.is_json_file(args.infile)
+            if is_json is True:
+                print(msg.success)
+                print(msg.is_json)
+            else:
+                print(msg.failure)
+                print(msg.test_ini, end='')
+                is_ini = fn.is_ini_file(args.infile, **settings_dict)
+                if is_ini is True:
+                    print(msg.success)
+                    print(msg.is_ini)
+                else:
+                    print(msg.failure)
+                    print(msg.unknown)
+        elif extension == '.ini':
+            print(msg.test_ini, end='')
+            is_ini = fn.is_ini_file(args.infile, **settings_dict)
+            if is_ini is True:
+                print(msg.success)
+                print(msg.is_ini)
+            else:
+                print(msg.failure)
+                print(msg.test_json, end='')
+                is_json = fn.is_json_file(args.infile)
+                if is_json is True:
+                    print(msg.success)
+                    print(msg.is_json)
+                else:
+                    print(msg.failure)
+                    print(msg.unknown)
+        # print(msg.done)
 
     if args.command in ('read', 'rea', 're', 'r', 'rd'):
         cfg = fn.Configuration(rawlines, **settings_dict)

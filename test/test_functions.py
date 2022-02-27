@@ -22,10 +22,11 @@ def test_is_comment():
         '',
         '          ',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line in line_iscomment_true:
         assert fn.Line(line, **cfg).is_comment() is True
     for line in line_iscomment_false:
@@ -45,10 +46,11 @@ def test_is_empty():
         '[section1]',
         'key = value',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line in line_isempty_true:
         assert fn.Line(line, **cfg).is_empty() is True
     for line in line_isempty_false:
@@ -68,10 +70,11 @@ def test_is_key_value_pair():
         'key:value',
         '            ',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line in line_iskeyvaluepair_true:
         assert fn.Line(line, **cfg).is_key_value_pair() is True
     for line in line_iskeyvaluepair_false:
@@ -93,10 +96,11 @@ def test_is_section():
         '',
         '          ',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line in line_issection_true:
         assert fn.Line(line, **cfg).is_section() is True
     for line in line_issection_false:
@@ -126,10 +130,11 @@ def test_is_unknown():
         '[[[section1]]]',
         '[]ction1[]]',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line in line_is_unknown_true:
         assert fn.Line(line, **cfg).is_unknown() is True
     for line in line_is_unknown_false:
@@ -151,10 +156,11 @@ def test_comment():
         'comment4',
         'comment comment 5',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line_in, line_out in zip(line_comments_raw, line_comments_content):
         assert fn.Line(line_in, **cfg).comment() == line_out
 
@@ -176,10 +182,11 @@ def test_section_name():
         'section5',
         'section name 6',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line_in, line_out in zip(line_section_name_raw,
                                  line_section_name_content):
         assert fn.Line(line_in, **cfg).section_name() == line_out
@@ -198,10 +205,11 @@ def test_key_value_pair():
         ('key3', 'value3'),
         ('key key key 4', 'value value value 4'),
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     for line_in, line_out in zip(line_key_value_raw, line_key_value_content):
         assert fn.Line(line_in, **cfg).key_value_pair() == line_out
 
@@ -245,10 +253,11 @@ def test_get_types():
         'unknown',
         'empty',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     assert fn.Configuration(rawlines, **cfg).get_types() == types
 
 
@@ -291,10 +300,11 @@ def test_get_content():
         'aklwfwiopwjj',
         '',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     assert fn.Configuration(rawlines, **cfg).get_content() == content
 
 
@@ -321,10 +331,11 @@ def test_formatted():
         '',
         'aklwfwiopwjj',
         ]
-    cfg = {'comment_char': '#',
-           'section_marker': '[]',
-           'assignment_char': '=',
-           }
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
     types = fn.Configuration(rawlines, **cfg).get_types()
     content = fn.Configuration(rawlines, **cfg).get_content()
     assert fn.formatted(types, content, **cfg) == formatted
@@ -353,3 +364,43 @@ def test_is_json_str():
         assert fn.is_json_str(string) is True
     for string in is_json_str_false:
         assert fn.is_json_str(string) is False
+
+
+def test_is_ini_str():
+    is_ini_str_true = [
+        '# This is a comment.',
+        '# This is another comment.',
+        '',
+        '[section1]',
+        'key1 = value1',
+        'key2 = value2',
+        'key3 = value3',
+        '',
+        '',
+        '   # This is also a comment.    ',
+        '',
+        '[  section  2   ]',
+        'key  4   =   value  4',
+        '   key5 = value5   ',
+        'key6 = value6',
+        '',
+        ]
+    is_ini_str_false = [
+        '{}',
+        '{"key1": "value1"}',
+        '{"key2": "value2", "key3": "value3"}',
+        '{"key4": 1234, "key5": 12.34}',
+        '{"key6": [1, 2, 3]}',
+        '{"section2"}',
+        'abcdef',
+        '1234',
+        ]
+    cfg = {
+        'comment_char': '#',
+        'section_marker': '[]',
+        'assignment_char': '=',
+        }
+    for string in is_ini_str_true:
+        assert fn.is_ini_str(string, **cfg) is True
+    for string in is_ini_str_false:
+        assert fn.is_ini_str(string, **cfg) is False

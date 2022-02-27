@@ -10,13 +10,14 @@ def colors():
     """Define colors for command-line output."""
     colors_dict = {'message': Fore.YELLOW,
                    'warning': Fore.RED,
+                   'success': Fore.GREEN,
                    'detail': Style.BRIGHT + Fore.MAGENTA,
                    'reset': Style.RESET_ALL,
                    }
     return colors_dict
 
 
-def messages(color, infile, outfile):
+def messages(color, infile, extension, outfile):
     """Define command-line messages."""
     msg_dict = {
         'arg_all': '{}[read] Optional argument \'--all\' = \'--raw '
@@ -41,8 +42,34 @@ def messages(color, infile, outfile):
                       '\'{}\' ...{}'.format(color.message,
                                             outfile,
                                             color.reset),
+        'extension': '{}[read] File-name extension \'{}\' suggests {} '
+                     'format.{}'.format(color.message,
+                                        extension,
+                                        extension[1:].upper(),
+                                        color.reset),
+        'other_extension': '{}[warning] Unexpected file-name extension \'{}\' '
+                           '(expected \'.json\' or '
+                           '\'.ini\').{}'.format(color.warning,
+                                                 extension,
+                                                 color.reset),
+        'test_json': '{}[read] Try parsing JSON format '
+                     '...{}'.format(color.message,
+                                    color.reset),
+        'test_ini': '{}[read] Try parsing INI format '
+                    '...{}'.format(color.message,
+                                   color.reset),
+        'is_json': '{}[read] Detected JSON format.{}'.format(color.message,
+                                                             color.reset),
+        'is_ini': '{}[read] Detected INI format.{}'.format(color.message,
+                                                           color.reset),
+        'unknown': '{}[error] Unknown file format!{}'.format(color.warning,
+                                                             color.reset),
         'done': '{} DONE!{}'.format(color.message,
                                     color.reset),
+        'success': '{} SUCCESS!{}'.format(color.success,
+                                          color.reset),
+        'failure': '{} FAILURE!{}'.format(color.warning,
+                                          color.reset),
         'warn_comments': '{}[warning] Conversion to JSON does not conserve '
                          'comments and blank lines!{}'.format(color.warning,
                                                               color.reset),
