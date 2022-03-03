@@ -10,8 +10,8 @@ import defaults as dflt
 
 
 # Define version string
-version_num = '0.8'
-version_dat = '2022-02-27'
+version_num = '0.9'
+version_dat = '2022-03-03'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -139,43 +139,10 @@ def main():
         print(msg.read_file, end='')
         rawlines = fn.filetolist(args.infile)
         print(msg.done)
-        if extension in ('.json', '.ini'):
-            print(msg.extension)
+        if args.verbose >= 1:
+            fn.parse_config_verbose(args.infile, extension, settings_dict, msg)
         else:
-            print(msg.other_extension)
-        if extension != '.ini':
-            print(msg.test_json, end='')
-            is_json = fn.is_json_file(args.infile)
-            if is_json is True:
-                print(msg.success)
-                print(msg.is_json)
-            else:
-                print(msg.failure)
-                print(msg.test_ini, end='')
-                is_ini = fn.is_ini_file(args.infile, **settings_dict)
-                if is_ini is True:
-                    print(msg.success)
-                    print(msg.is_ini)
-                else:
-                    print(msg.failure)
-                    print(msg.unknown)
-        elif extension == '.ini':
-            print(msg.test_ini, end='')
-            is_ini = fn.is_ini_file(args.infile, **settings_dict)
-            if is_ini is True:
-                print(msg.success)
-                print(msg.is_ini)
-            else:
-                print(msg.failure)
-                print(msg.test_json, end='')
-                is_json = fn.is_json_file(args.infile)
-                if is_json is True:
-                    print(msg.success)
-                    print(msg.is_json)
-                else:
-                    print(msg.failure)
-                    print(msg.unknown)
-        # print(msg.done)
+            fn.parse_config_quiet(args.infile, extension, settings_dict)
 
     if args.command in ('read', 'rea', 're', 'r', 'rd'):
         cfg = fn.Configuration(rawlines, **settings_dict)

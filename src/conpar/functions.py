@@ -419,6 +419,61 @@ def is_ini_file(infile, comment_char, section_marker, assignment_char):
         return False
 
 
+def parse_config_verbose(infile, extension, settings_dict, msg):
+    if extension in ('.json', '.ini'):
+        print(msg.extension)
+    else:
+        print(msg.other_extension)
+    if extension != '.ini':
+        print(msg.test_json, end='')
+        is_json = is_json_file(infile)
+        if is_json is True:
+            print(msg.success)
+            print(msg.is_json)
+        else:
+            print(msg.failure)
+            print(msg.test_ini, end='')
+            is_ini = is_ini_file(infile, **settings_dict)
+            if is_ini is True:
+                print(msg.success)
+                print(msg.is_ini)
+            else:
+                print(msg.failure)
+                print(msg.unknown)
+    elif extension == '.ini':
+        print(msg.test_ini, end='')
+        is_ini = is_ini_file(infile, **settings_dict)
+        if is_ini is True:
+            print(msg.success)
+            print(msg.is_ini)
+        else:
+            print(msg.failure)
+            print(msg.test_json, end='')
+            is_json = is_json_file(infile)
+            if is_json is True:
+                print(msg.success)
+                print(msg.is_json)
+            else:
+                print(msg.failure)
+                print(msg.unknown)
+
+
+def parse_config_quiet(infile, extension, settings_dict):
+    if extension != '.ini':
+        is_json = is_json_file(infile)
+        if is_json is False:
+            is_ini = is_ini_file(infile, **settings_dict)
+            # if is_ini is False:
+                # unknown = True
+    elif extension == '.ini':
+        is_ini = is_ini_file(infile, **settings_dict)
+        if is_ini is False:
+            is_json = is_json_file(infile)
+            # if is_json is False:
+                # unknown = True
+    # return unknown
+
+
 # def check_config_dir(config_dir):
 #     """Check if config directory exists. If not, ask for creating one."""
 #     if not os.path.isdir(config_dir):
