@@ -10,8 +10,8 @@ import defaults as dflt
 
 
 # Define version string
-version_num = '0.9'
-version_dat = '2022-03-03'
+version_num = '0.11'
+version_dat = '2022-03-07'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -140,12 +140,29 @@ def main():
         rawlines = fn.filetolist(args.infile)
         print(msg.done)
         if args.verbose >= 1:
-            fn.parse_config_verbose(args.infile, extension, settings_dict, msg)
+            file_format = fn.parse_config_verbose(args.infile, extension,
+                                                  settings_dict, msg)
         else:
-            fn.parse_config_quiet(args.infile, extension, settings_dict)
+            file_format = fn.parse_config_quiet(args.infile, extension,
+                                                settings_dict)
+
+        if file_format == 'JSON':
+            dict_json = fn.import_json(args.infile)
+            cfg_json = fn.Configuration_JSON(dict_json)
+            types = cfg_json.get_types()
+            content = cfg_json.get_content()
+            ini = fn.formatted(types, content, **settings_dict)
+            cfg = fn.Configuration(types, content, list(dict_json), ini,
+                                   **settings_dict)
+        elif file_format == 'INI':
+            cfg_ini = fn.Configuration_INI(rawlines, **settings_dict)
+            types = cfg_ini.get_types()
+            content = cfg_ini.get_content()
+            json = list(cfg_ini.to_dictionary())
+            ini = fn.formatted(types, content, **settings_dict)
+            cfg = fn.Configuration(types, content, json, ini, **settings_dict)
 
     if args.command in ('read', 'rea', 're', 'r', 'rd'):
-        cfg = fn.Configuration(rawlines, **settings_dict)
         if args.all:
             print(msg.arg_all)
         if args.raw or args.all:
@@ -163,7 +180,7 @@ def main():
 
     if args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
                         'c'):
-        cfg = fn.Configuration(rawlines, **settings_dict)
+        cfg = fn.Configuration_INI(rawlines, **settings_dict)
         if args.json:
             print(msg.arg_dict)
             print(msg.warn_comments)

@@ -13,7 +13,7 @@ long_description = (here/'README.md').read_text(encoding='utf-8')
 
 setup(
         name='conpar',
-        version='0.9',
+        version='0.11',
         description='A parser for configuration files.',
         long_description=long_description,
         long_description_content_type='text/markdown',
@@ -32,7 +32,7 @@ setup(
             'Programming Language :: Python :: 3.6',
             ],
         keywords='configuration, parser, conversion, plain text, '
-        'human readable',
+        'human readable, JSON, INI',
         package_dir={'': 'src'},
         packages=find_packages(where='src'),
         install_requires=['argparse', 'pandas', 'os', 'json', 'colorama'],

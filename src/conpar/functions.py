@@ -5,6 +5,7 @@
 import os
 import pandas as pd
 import json
+import defaults as dflt
 
 
 class Color(object):
@@ -45,6 +46,96 @@ class Message(object):
         self.warn_comments = warn_comments
 
 
+class Config_file(object):
+    """Define configuration-file properties and methods."""
+
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.directory = os.path.dirname(file_path)
+        self.filename = os.path.basename(file_path)
+        self.extension = os.path.splitext(file_path)[-1]
+        self.format = self.detect_format()
+
+    def to_list(self):
+        """Read file into list line by line."""
+        with open(self.file_path, 'r', encoding='utf-8') as f:
+            lines = []
+            for line in f:
+                lines.append(line.rstrip())
+        return lines
+
+    def is_json(self):
+        """Check if file is JSON."""
+        try:
+            with open(self.file_path, 'r') as f:
+                json.load(f)
+        except ValueError:
+            return False
+        return True
+
+    def is_ini(self):
+        """Check if file is INI."""
+        rawlines = self.to_list()
+        assignment_char = '='
+        for line in rawlines:
+            # Check if assignment character is present
+            if assignment_char in line:
+                # Check if assignment character is surrounded by key-value pair
+                if line.split('=')[0] != '' and line.split('=')[1] != '':
+                    return True
+        return False
+
+    def detect_format(self):
+        """Detect configuration-file format (JSON or INI)."""
+        colors_dict = dflt.colors()
+        color = Color(**colors_dict)
+        msg_dict = dflt.messages(color, self.file_path, self.extension, '')
+        msg = Message(**msg_dict)
+        file_format = 'unknown'
+        # Use filename extension as hint for file format
+        if self.extension in ('.json', '.ini'):
+            print(msg.extension)
+        else:
+            print(msg.other_extension)
+        if self.extension != '.ini':
+            print(msg.test_json, end='')
+            is_json = self.is_json()
+            if is_json is True:
+                file_format = 'JSON'
+                print(msg.success)
+                print(msg.is_json)
+            else:
+                print(msg.failure)
+                print(msg.test_ini, end='')
+                is_ini = self.is_ini()
+                if is_ini is True:
+                    file_format = 'INI'
+                    print(msg.success)
+                    print(msg.is_ini)
+                else:
+                    print(msg.failure)
+                    print(msg.unknown)
+        elif self.extension == '.ini':
+            print(msg.test_ini, end='')
+            is_ini = self.is_ini()
+            if is_ini is True:
+                file_format = 'INI'
+                print(msg.success)
+                print(msg.is_ini)
+            else:
+                print(msg.failure)
+                print(msg.test_json, end='')
+                is_json = self.is_json()
+                if is_json is True:
+                    file_format = 'JSON'
+                    print(msg.success)
+                    print(msg.is_json)
+                else:
+                    print(msg.failure)
+                    print(msg.unknown)
+        return file_format
+
+
 class Config_settings(object):
     """Define configuration settings."""
 
@@ -55,7 +146,7 @@ class Config_settings(object):
         self.assignment_char = assignment_char
 
 
-class Line(Config_settings):
+class Line_INI(Config_settings):
     """Define single-line properties and methods."""
 
     def __init__(self, rawline, comment_char, section_marker, assignment_char):
@@ -139,8 +230,8 @@ class Line(Config_settings):
             return self.line[1:-1].strip()
 
 
-class Configuration(Config_settings):
-    """Define configuration properties and methods."""
+class Configuration_INI(Config_settings):
+    """Define INI configuration properties and methods."""
 
     def __init__(self, rawlines, comment_char, section_marker,
                  assignment_char):
@@ -151,8 +242,8 @@ class Configuration(Config_settings):
         """Determine configuration content type."""
         types = []
         for rawline in self.rawlines:
-            line = Line(rawline, self.comment_char, self.section_marker,
-                        self.assignment_char)
+            line = Line_INI(rawline, self.comment_char, self.section_marker,
+                            self.assignment_char)
             if line.is_comment() is True:
                 types.append('comment')
             elif line.is_empty() is True:
@@ -169,8 +260,8 @@ class Configuration(Config_settings):
         """Determine line contents."""
         content = []
         for rawline in self.rawlines:
-            line = Line(rawline, self.comment_char, self.section_marker,
-                        self.assignment_char)
+            line = Line_INI(rawline, self.comment_char, self.section_marker,
+                            self.assignment_char)
             if line.is_comment() is True:
                 content.append(line.comment())
             elif line.is_empty() is True:
@@ -240,28 +331,101 @@ class Configuration(Config_settings):
         with open(filename, 'w') as f:
             json.dump(self.to_dictionary(), f, indent=4)
 
-    def import_json(self, filename):
-        """Read JSON file and write content into nested dictionary."""
-        with open(filename, 'r') as f:
-            config_dict = json.load(f)
-        return config_dict
 
-    def from_dictionary(self, json_dict):
-        """Convert JSON dict to labeled dict."""
+class Configuration_JSON(object):
+    """Define INI configuration properties and methods."""
+
+    def __init__(self, dictionary):
+        self.dictionary = dictionary
+
+    def get_content(self):
+        """Convert JSON dict to list."""
         # df = pd.DataFrame.from_dict(json_dict)
-        sections = list(json_dict.keys())
-        keys = list(list(json_dict.values())[0].keys())
-        values = list(list(json_dict.values())[0].values())
+        sections = list(self.dictionary.keys())
+        keys = list(list(self.dictionary.values())[0].keys())
+        values = list(list(self.dictionary.values())[0].values())
         key_value_pairs = list(zip(keys, values))
         list1 = []
         for i, section in enumerate(sections):
-            keys = list(list(json_dict.values())[i].keys())
-            values = list(list(json_dict.values())[i].values())
+            keys = list(list(self.dictionary.values())[i].keys())
+            values = list(list(self.dictionary.values())[i].values())
             key_value_pairs = list(zip(keys, values))
             list1.append(section)
             for pair in key_value_pairs:
                 list1.append(pair)
         return list1
+
+    def get_types(self):
+        """Determine content type."""
+        types = []
+        for line in self.get_content():
+            if type(line) is tuple:
+                types.append('key_value_pair')
+            else:
+                types.append('section_head')
+        return types
+
+
+class Configuration(Config_settings):
+    """Define generic configuration object."""
+
+    def __init__(self, types, content, json, ini, comment_char, section_marker,
+                 assignment_char):
+        super().__init__(comment_char, section_marker, assignment_char)
+        self.types = types
+        self.content = content
+        self.json = json
+        self.ini = ini
+
+    def to_dataframe(self):
+        """Create Pandas DataFrame with all information."""
+        cfg_dict = {
+            'TYPE': self.types,
+            'CONTENT': self.content,
+            'JSON': self.json,
+            'INI': self.ini,
+            }
+        df = pd.DataFrame(cfg_dict)
+        # Label unnamed auto-index
+        df.index.name = 'LINE'
+        return df
+
+    def count_types(self):
+        """Return dict with frequencies of config-file line types."""
+        type_count = self.to_dataframe()['TYPE'].value_counts()
+        types = [
+            'comment',
+            'empty',
+            'section_head',
+            'key_value_pair',
+            'unknown'
+            ]
+        return dict(type_count.reindex(types, fill_value=0))
+
+
+def import_json(filename):
+    """Read JSON file and write content into nested dictionary."""
+    with open(filename, 'r') as f:
+        config_dict = json.load(f)
+    return config_dict
+
+
+# def from_dictionary(json_dict):
+#     """Convert JSON dict to labeled dict."""
+#     # df = pd.DataFrame.from_dict(json_dict)
+#     sections = list(json_dict.keys())
+#     keys = list(list(json_dict.values())[0].keys())
+#     values = list(list(json_dict.values())[0].values())
+#     key_value_pairs = list(zip(keys, values))
+#     list1 = []
+#     for i, section in enumerate(sections):
+#         keys = list(list(json_dict.values())[i].keys())
+#         values = list(list(json_dict.values())[i].values())
+#         key_value_pairs = list(zip(keys, values))
+#         list1.append(section)
+#         for pair in key_value_pairs:
+#             list1.append(pair)
+#     return list1
 
 
 def formatted(types, content, comment_char, section_marker, assignment_char):
@@ -286,27 +450,17 @@ def formatted(types, content, comment_char, section_marker, assignment_char):
     return clean_lines
 
 
-def list_get_types(lines_list):
-    types = []
-    for line in lines_list:
-        if type(line) is tuple:
-            types.append('key_value_pair')
-        else:
-            types.append('section_head')
-    return types
-
-
-def ini_to_dataframe(lines_list, comment_char, section_marker, assignment_char):
-    types = list_get_types(lines_list)
-    cfg_dict = {
-        'TYPE': types,
-        'CONTENT': lines_list,
-        'FORMATTED': formatted(types, lines_list, comment_char, section_marker, assignment_char)
-        }
-    df = pd.DataFrame(cfg_dict)
-    # Label unnamed auto-index
-    df.index.name = 'LINE'
-    return df
+# def ini_to_dataframe(lines_list, comment_char, section_marker, assignment_char):
+#     types = list_get_types(lines_list)
+#     cfg_dict = {
+#         'TYPE': types,
+#         'CONTENT': lines_list,
+#         'INI_FORMATTED': formatted(types, lines_list, comment_char, section_marker, assignment_char)
+#         }
+#     df = pd.DataFrame(cfg_dict)
+#     # Label unnamed auto-index
+#     df.index.name = 'LINE'
+#     return df
 
 
 def dataframe_to_ini_list(df):
@@ -319,27 +473,6 @@ def dataframe_to_ini_list(df):
             ini_list.append('')
         ini_list.append(contents[i])
     return ini_list
-
-
-def filetolist(infile):
-    """
-    Read file into list line by line.
-
-    Parameters
-    ----------
-    infile : string
-        name of input file.
-
-    Returns
-    -------
-    lines : list of strings
-        list of file rows.
-    """
-    with open(infile, 'r', encoding='utf-8') as f:
-        lines = []
-        for line in f:
-            lines.append(line.rstrip())
-    return lines
 
 
 def listtofile(outfile, lines):
@@ -388,90 +521,78 @@ def is_json_str(string):
     return True
 
 
-def is_json_file(infile):
-    """Check if file is JSON."""
-    try:
-        with open(infile, 'r') as f:
-            json.load(f)
-    except ValueError:
-        return False
-    return True
-
-
 def is_ini_str(string, comment_char, section_marker, assignment_char):
     """Check if string is INI."""
     # Create line object
-    cfg = Line(string, comment_char, section_marker, assignment_char)
+    cfg = Line_INI(string, comment_char, section_marker, assignment_char)
     # Return opposite of is_unknown() boolean
     return not(cfg.is_unknown())
 
 
-def is_ini_file(infile, comment_char, section_marker, assignment_char):
-    """Check if string is INI."""
-    rawlines = filetolist(infile)
-    cfg = Configuration(rawlines, comment_char, section_marker,
-                        assignment_char)
-    # At least one key-value pair is needed:
-    # print(cfg.count_types()['key_value_pair'])
-    if cfg.count_types()['key_value_pair'] > 0:
-        return True
-    else:
-        return False
+# def parse_config_verbose(infile, extension, settings_dict, msg):
+#     file_format = 'unknown'
+#     if extension in ('.json', '.ini'):
+#         print(msg.extension)
+#     else:
+#         print(msg.other_extension)
+#     if extension != '.ini':
+#         print(msg.test_json, end='')
+#         is_json = is_json_file(infile)
+#         if is_json is True:
+#             file_format = 'JSON'
+#             print(msg.success)
+#             print(msg.is_json)
+#         else:
+#             print(msg.failure)
+#             print(msg.test_ini, end='')
+#             is_ini = is_ini_file(infile, **settings_dict)
+#             if is_ini is True:
+#                 file_format = 'INI'
+#                 print(msg.success)
+#                 print(msg.is_ini)
+#             else:
+#                 print(msg.failure)
+#                 print(msg.unknown)
+#     elif extension == '.ini':
+#         print(msg.test_ini, end='')
+#         is_ini = is_ini_file(infile, **settings_dict)
+#         if is_ini is True:
+#             file_format = 'INI'
+#             print(msg.success)
+#             print(msg.is_ini)
+#         else:
+#             print(msg.failure)
+#             print(msg.test_json, end='')
+#             is_json = is_json_file(infile)
+#             if is_json is True:
+#                 file_format = 'JSON'
+#                 print(msg.success)
+#                 print(msg.is_json)
+#             else:
+#                 print(msg.failure)
+#                 print(msg.unknown)
+#     return file_format
 
 
-def parse_config_verbose(infile, extension, settings_dict, msg):
-    if extension in ('.json', '.ini'):
-        print(msg.extension)
-    else:
-        print(msg.other_extension)
-    if extension != '.ini':
-        print(msg.test_json, end='')
-        is_json = is_json_file(infile)
-        if is_json is True:
-            print(msg.success)
-            print(msg.is_json)
-        else:
-            print(msg.failure)
-            print(msg.test_ini, end='')
-            is_ini = is_ini_file(infile, **settings_dict)
-            if is_ini is True:
-                print(msg.success)
-                print(msg.is_ini)
-            else:
-                print(msg.failure)
-                print(msg.unknown)
-    elif extension == '.ini':
-        print(msg.test_ini, end='')
-        is_ini = is_ini_file(infile, **settings_dict)
-        if is_ini is True:
-            print(msg.success)
-            print(msg.is_ini)
-        else:
-            print(msg.failure)
-            print(msg.test_json, end='')
-            is_json = is_json_file(infile)
-            if is_json is True:
-                print(msg.success)
-                print(msg.is_json)
-            else:
-                print(msg.failure)
-                print(msg.unknown)
-
-
-def parse_config_quiet(infile, extension, settings_dict):
-    if extension != '.ini':
-        is_json = is_json_file(infile)
-        if is_json is False:
-            is_ini = is_ini_file(infile, **settings_dict)
-            # if is_ini is False:
-                # unknown = True
-    elif extension == '.ini':
-        is_ini = is_ini_file(infile, **settings_dict)
-        if is_ini is False:
-            is_json = is_json_file(infile)
-            # if is_json is False:
-                # unknown = True
-    # return unknown
+# def parse_config_quiet(infile, extension, settings_dict):
+#     file_format = 'unknown'
+#     if extension != '.ini':
+#         is_json = is_json_file(infile)
+#         if is_json is True:
+#             file_format = 'JSON'
+#         else:
+#             is_ini = is_ini_file(infile, **settings_dict)
+#             if is_ini is True:
+#                 file_format = 'INI'
+#     elif extension == '.ini':
+#         is_ini = is_ini_file(infile, **settings_dict)
+#         if is_ini is True:
+#             file_format = 'INI'
+#         else:
+#             is_json = is_json_file(infile)
+#             if is_json is True:
+#                 file_format = 'JSON'
+#     return file_format
 
 
 # def check_config_dir(config_dir):
