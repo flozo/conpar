@@ -10,8 +10,8 @@ import defaults as dflt
 
 
 # Define version string
-version_num = '0.11'
-version_dat = '2022-03-07'
+version_num = '0.12'
+version_dat = '2022-03-08'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -103,6 +103,10 @@ def main():
     if verbosity >= 1:
         print(args)
 
+    # Define command aliases
+    aliases_convert = ('convert', 'conver', 'conve', 'conv', 'con', 'co', 'c')
+    aliases_read = ('read', 'rea', 're', 'r', 'rd')
+
     # Create config-settings object using specified arguments
     settings_dict = {'comment_char': args.comment_char,
                      'section_marker': args.section_marker,
@@ -116,8 +120,7 @@ def main():
     color = fn.Color(**colors_dict)
 
     # Handle undefined args.outfile
-    if args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
-                        'c'):
+    if args.command in aliases_convert:
         outfile = args.outfile
     else:
         outfile = ''
@@ -133,9 +136,7 @@ def main():
 
     print(color.detail + str(args) + color.reset)
 
-    if (args.command in ('read', 'rea', 're', 'r', 'rd') or
-            args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
-                             'c')):
+    if (args.command in aliases_read or args.command in aliases_convert):
         print(msg.read_file, end='')
         rawlines = fn.filetolist(args.infile)
         print(msg.done)
@@ -162,7 +163,7 @@ def main():
             ini = fn.formatted(types, content, **settings_dict)
             cfg = fn.Configuration(types, content, json, ini, **settings_dict)
 
-    if args.command in ('read', 'rea', 're', 'r', 'rd'):
+    if args.command in aliases_read:
         if args.all:
             print(msg.arg_all)
         if args.raw or args.all:
@@ -178,8 +179,7 @@ def main():
             cfg_dict = cfg.to_dictionary()
             fn.printdict(cfg_dict)
 
-    if args.command in ('convert', 'conver', 'conve', 'conv', 'con', 'co',
-                        'c'):
+    if args.command in aliases_convert:
         cfg = fn.Configuration_INI(rawlines, **settings_dict)
         if args.json:
             print(msg.arg_dict)
