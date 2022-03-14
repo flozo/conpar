@@ -10,8 +10,8 @@ import defaults as dflt
 
 
 # Define version string
-version_num = '0.12'
-version_dat = '2022-03-08'
+version_num = '0.14'
+version_dat = '2022-03-14'
 version_str = '{} ({})'.format(version_num, version_dat)
 
 
@@ -125,8 +125,11 @@ def main():
     else:
         outfile = ''
 
+    # Create configuration-file object
+    config_file = fn.Config_file(args.infile)
+
     # Detect file extension
-    extension = os.path.splitext(args.infile)[-1]
+    extension = config_file.extension
 
     # Define command-line messages
     msg_dict = dflt.messages(color, args.infile, extension, outfile)
@@ -138,14 +141,9 @@ def main():
 
     if (args.command in aliases_read or args.command in aliases_convert):
         print(msg.read_file, end='')
-        rawlines = fn.filetolist(args.infile)
+        rawlines = config_file.to_list()
         print(msg.done)
-        if args.verbose >= 1:
-            file_format = fn.parse_config_verbose(args.infile, extension,
-                                                  settings_dict, msg)
-        else:
-            file_format = fn.parse_config_quiet(args.infile, extension,
-                                                settings_dict)
+        file_format = config_file.detect_format()
 
         if file_format == 'JSON':
             dict_json = fn.import_json(args.infile)

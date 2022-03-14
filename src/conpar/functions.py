@@ -64,6 +64,15 @@ class Config_file(object):
                 lines.append(line.rstrip())
         return lines
 
+    def to_dict(self):
+        """Read JSON file and write content into nested dictionary."""
+        if self.is_json() is False:
+            print('[error] Direct conversion from INI to dict not supported!')
+            return None
+        with open(self.file_path, 'r') as f:
+            config_dict = json.load(f)
+        return config_dict
+
     def is_json(self):
         """Check if file is JSON."""
         try:
@@ -78,7 +87,7 @@ class Config_file(object):
         rawlines = self.to_list()
         assignment_char = '='
         for line in rawlines:
-            # Check if assignment character is present
+            # Check if (at least one) assignment character is present
             if assignment_char in line:
                 # Check if assignment character is surrounded by key-value pair
                 if line.split('=')[0] != '' and line.split('=')[1] != '':
@@ -136,6 +145,130 @@ class Config_file(object):
         return file_format
 
 
+# class Line(object):
+#     """Define single-line properties and methods."""
+
+#     def __init__(self, rawline, comment_char, section_marker, assignment_char):
+#         self.rawline = rawline
+#         self.rawlen = len(self.rawline)
+#         # Create a version of rawline without leading and trailing spaces
+#         self.line = self.rawline.strip()
+#         self.len = len(self.line)
+#         self.comment_char = comment_char
+#         self.section_marker = section_marker
+#         self.assignment_char = assignment_char
+
+#     def is_json_str(self):
+#         """Check if string is JSON."""
+#         try:
+#             json.loads(self.line)
+#         except ValueError:
+#             return False
+#         return True
+
+#     def is_json_line(self):
+#         """Check if line can be part of a JSON string."""
+#         json_fragments = ('{', '}', '},')
+#         if self.line in json_fragments:
+#             return True
+#         if len(self.line.split(':')) == 2:
+#             return True
+#         return False
+
+#     # Functions for determining (JSON) content type
+    
+#     def is_json_section(self):
+#         sections = list(self.dictionary.keys())
+
+#     # Functions for determining (INI) content type
+
+#     def is_ini_comment(self):
+#         """Check if line is a INI comment line."""
+#         # Return False if line is empty
+#         if len(self.line) == 0:
+#             return False
+#         # Check if first character is a comment character
+#         if self.line[0] == self.comment_char:
+#             return True
+#         else:
+#             return False
+
+#     def is_empty(self):
+#         """Check if line is empty (except spaces)."""
+#         if self.line.replace(' ', '') == '':
+#             return True
+#         else:
+#             return False
+
+#     def is_ini_key_value_pair(self):
+#         """Check if line contains an INI key-value separator."""
+#         if self.assignment_char in self.line:
+#             return True
+#         else:
+#             return False
+
+#     def is_ini_section(self):
+#         """Check if line has an INI section marker."""
+#         # Return False if line is empty
+#         if len(self.line) == 0:
+#             return False
+#         # Return False if first character is not a section marker
+#         if self.line[0] != self.section_marker[0]:
+#             return False
+#         # Check if an optional closing marker is present
+#         if (len(self.section_marker) == 2 and
+#                 self.line[-1] == self.section_marker[1]):
+#             return True
+#         else:
+#             return False
+
+#     def is_ini_unknown(self):
+#         """Check if line type is (INI) unknown."""
+#         if not(self.is_comment() or self.is_empty() or
+#                self.is_key_value_pair() or self.is_section()):
+#             return True
+#         else:
+#             return False
+
+#     # Functions for extracting (INI) content
+
+#     def ini_comment(self):
+#         """If line is comment, return comment content."""
+#         # Check if line is comment
+#         if self.is_ini_comment() is True:
+#             # Return comment string without leading and trailing spaces
+#             return self.line.replace('#', '').strip()
+
+#     def ini_key_value_pair(self):
+#         """If line is a key-value pair, return tuple (key, value)."""
+#         # Check if line is a key-value pair
+#         if self.is_ini_key_value_pair() is True:
+#             # Return key and value strings without leading and trailing spaces
+#             return (self.line.split(self.assignment_char)[0].strip(),
+#                     self.line.split(self.assignment_char)[1].strip())
+
+#     def ini_section_name(self):
+#         """If line is section head, return section name."""
+#         # Check if line is a section head
+#         if self.is_ini_section() is True:
+#             # Return section name without leading and trailing spaces
+#             return self.line[1:-1].strip()
+
+#     def is_ini(self):
+#         """Check if string is INI."""
+#         # Check if not JSON and not is_unknown()
+#         return all([not(self.is_json()), not(self.is_ini_unknown())])
+
+
+# class Lines(object):
+#     """Define lines properties and methods."""
+
+#     def __init__(self, rawlines):
+#         self.rawlines = rawlines
+#         self.numlines = len(rawlines)
+
+#     # def
+
 class Config_settings(object):
     """Define configuration settings."""
 
@@ -146,14 +279,26 @@ class Config_settings(object):
         self.assignment_char = assignment_char
 
 
+class Skip_settings(object):
+    """Define skip settings."""
+
+    def __init__(self, skip_comments=False, skip_empty=False,
+                 skip_unknown=False):
+        self.skip_comments = skip_comments
+        self.skip_empty = skip_empty
+        self.skip_unknown = skip_unknown
+
+
 class Line_INI(Config_settings):
     """Define single-line properties and methods."""
 
     def __init__(self, rawline, comment_char, section_marker, assignment_char):
         super().__init__(comment_char, section_marker, assignment_char)
         self.rawline = rawline
+        self.rawlen = len(self.rawline)
         # Create a version of rawline without leading and trailing spaces
         self.line = self.rawline.strip()
+        self.len = len(self.line)
 
     # Functions for determining content type
 
@@ -200,7 +345,7 @@ class Line_INI(Config_settings):
     def is_unknown(self):
         """Check if line type is unknown."""
         if not(self.is_comment() or self.is_empty() or
-               self.is_key_value_pair() or self.is_section()):
+                self.is_key_value_pair() or self.is_section()):
             return True
         else:
             return False
@@ -230,13 +375,15 @@ class Line_INI(Config_settings):
             return self.line[1:-1].strip()
 
 
-class Configuration_INI(Config_settings):
+class Configuration_INI(Skip_settings, Config_settings):
     """Define INI configuration properties and methods."""
 
-    def __init__(self, rawlines, comment_char, section_marker,
-                 assignment_char):
-        super().__init__(comment_char, section_marker, assignment_char)
+    def __init__(self, rawlines, skip_comments, skip_empty, skip_unknown,
+                 comment_char, section_marker, assignment_char):
         self.rawlines = rawlines
+        Skip_settings.__init__(self, skip_comments, skip_empty, skip_unknown)
+        Config_settings.__init__(self, comment_char, section_marker,
+                                 assignment_char)
 
     def get_types(self):
         """Determine configuration content type."""
@@ -274,15 +421,22 @@ class Configuration_INI(Config_settings):
                 content.append(line.rawline)
         return content
 
+    def to_ini(self):
+        """Generate INI representation."""
+        return formatted(self.get_types(), self.get_content(),
+                         self.skip_comments, self.skip_empty,
+                         self.skip_unknown, self.comment_char,
+                         self.section_marker, self.assignment_char)
+
     def to_dataframe(self):
         """Create Pandas DataFrame with all information."""
         cfg_dict = {
             'TYPE': self.get_types(),
-            'CONTENT': self.get_content(),
             'RAW': self.rawlines,
-            'FORMATTED': formatted(self.get_types(), self.get_content(),
-                                   self.comment_char, self.section_marker,
-                                   self.assignment_char),
+            'CONTENT': self.get_content(),
+            'SKIP': skip_mark(self.get_types(), self.skip_comments,
+                              self.skip_empty, self.skip_unknown),
+            'INI': self.to_ini(),
             }
         df = pd.DataFrame(cfg_dict)
         # Label unnamed auto-index
@@ -302,7 +456,7 @@ class Configuration_INI(Config_settings):
         return dict(type_count.reindex(types, fill_value=0))
         # .rename_axis('TYPE').reset_index(name='COUNTS')
 
-    def to_dictionary(self):
+    def to_dict(self):
         """Create dictionary with sections and key-value pairs."""
         df = self.to_dataframe()
         # Get series of section heads
@@ -326,10 +480,10 @@ class Configuration_INI(Config_settings):
         # sub-dictionaries with key-value pairs as values
         return dict(zip(section_heads, section))
 
-    def export_json(self, filename):
-        """Export config data to JSON file."""
-        with open(filename, 'w') as f:
-            json.dump(self.to_dictionary(), f, indent=4)
+    # def export_json(self, filename):
+    #     """Export config data to JSON file."""
+    #     with open(filename, 'w') as f:
+    #         json.dump(self.to_dictionary(), f, indent=4)
 
 
 class Configuration_JSON(object):
@@ -364,6 +518,40 @@ class Configuration_JSON(object):
             else:
                 types.append('section_head')
         return types
+
+    def to_ini(self, skip_comments, skip_empty, skip_unknown, comment_char,
+               section_marker, assignment_char):
+        """Generate INI representation."""
+        return formatted(self.get_types(), self.get_content(), skip_comments,
+                         skip_empty, skip_unknown, comment_char,
+                         section_marker, assignment_char)
+
+    # def to_dataframe(self):
+    #     """Create Pandas DataFrame with all information."""
+    #     cfg_dict = {
+    #         'TYPE': self.get_types(),
+    #         'CONTENT': self.get_content(),
+    #         # 'RAW': self.rawlines,
+    #         'INI': formatted(self.get_types(), self.get_content(),
+    #                          self.comment_char, self.section_marker,
+    #                          self.assignment_char),
+    #         }
+    #     df = pd.DataFrame(cfg_dict)
+    #     # Label unnamed auto-index
+    #     df.index.name = 'LINE'
+    #     return df
+
+    # def count_types(self):
+    #     """Return dict with frequencies of config-file line types."""
+    #     type_count = self.to_dataframe()['TYPE'].value_counts()
+    #     types = [
+    #         'comment',
+    #         'empty',
+    #         'section_head',
+    #         'key_value_pair',
+    #         'unknown'
+    #         ]
+    #     return dict(type_count.reindex(types, fill_value=0))
 
 
 class Configuration(Config_settings):
@@ -403,11 +591,11 @@ class Configuration(Config_settings):
         return dict(type_count.reindex(types, fill_value=0))
 
 
-def import_json(filename):
-    """Read JSON file and write content into nested dictionary."""
-    with open(filename, 'r') as f:
-        config_dict = json.load(f)
-    return config_dict
+# def import_json(filename):
+#     """Read JSON file and write content into nested dictionary."""
+#     with open(filename, 'r') as f:
+#         config_dict = json.load(f)
+#     return config_dict
 
 
 # def from_dictionary(json_dict):
@@ -427,15 +615,37 @@ def import_json(filename):
 #             list1.append(pair)
 #     return list1
 
+def skip_mark(types_list, skip_comments, skip_empty, skip_unknown):
+    skip_dict = {
+        'TYPE': types_list,
+        'SKIP': 'False',
+        }
+    types_df = pd.DataFrame(skip_dict)
+    types_df.index.name = 'LINE'
+    if skip_comments is True:
+        types_df.loc[types_df['TYPE'] == 'comment', 'SKIP'] = 'True'
+    if skip_empty is True:
+        types_df.loc[types_df['TYPE'] == 'empty', 'SKIP'] = 'True'
+    if skip_unknown is True:
+        types_df.loc[types_df['TYPE'] == 'unknown', 'SKIP'] = 'True'
+    return types_df['SKIP'].tolist()
 
-def formatted(types, content, comment_char, section_marker, assignment_char):
+
+def formatted(types, content, skip_comments, skip_empty, skip_unknown,
+              comment_char, section_marker, assignment_char):
     """Create nicely formatted config-file lines."""
     clean_lines = []
     for line_type, content in zip(types, content):
         if line_type == 'comment':
-            clean_lines.append('{} {}'.format(comment_char, content))
+            if skip_comments is True:
+                clean_lines.append('**skip**')
+            else:
+                clean_lines.append('{} {}'.format(comment_char, content))
         elif line_type == 'empty':
-            clean_lines.append('')
+            if skip_empty is True:
+                clean_lines.append('**skip**')
+            else:
+                clean_lines.append('')
         elif line_type == 'section_head':
             sec_line = '{} {}'.format(section_marker[0], content)
             if len(section_marker) == 2:
@@ -446,7 +656,10 @@ def formatted(types, content, comment_char, section_marker, assignment_char):
                                                  assignment_char,
                                                  content[1]))
         else:
-            clean_lines.append(content)
+            if skip_unknown is True:
+                clean_lines.append('**skip**')
+            else:
+                clean_lines.append(content)
     return clean_lines
 
 
@@ -512,21 +725,7 @@ def printdict(dictionary):
     print(json.dumps(dictionary, sort_keys=False, indent=4))
 
 
-def is_json_str(string):
-    """Check if string is JSON."""
-    try:
-        json.loads(string)
-    except ValueError:
-        return False
-    return True
 
-
-def is_ini_str(string, comment_char, section_marker, assignment_char):
-    """Check if string is INI."""
-    # Create line object
-    cfg = Line_INI(string, comment_char, section_marker, assignment_char)
-    # Return opposite of is_unknown() boolean
-    return not(cfg.is_unknown())
 
 
 # def parse_config_verbose(infile, extension, settings_dict, msg):
